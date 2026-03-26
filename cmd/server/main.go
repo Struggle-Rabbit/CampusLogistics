@@ -13,7 +13,7 @@ import (
 
 func main() {
 	// 1. 初始化配置
-	if err := configs.InitConfig("configs/app.yaml"); err != nil {
+	if err := configs.InitConfig("configs/config-dev.yaml"); err != nil {
 		panic(fmt.Sprintf("初始化配置失败: %v", err))
 	}
 

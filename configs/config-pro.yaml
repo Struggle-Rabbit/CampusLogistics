@@ -1,6 +1,6 @@
 app:
   port: 8080
-  env: dev # 环境（dev/test/prod）
+  env: "prod" # 环境（dev/test/prod）
 mysql:
   dsn: "root:密码@tcp(127.0.0.1:3306)/campus_logistics?charset=utf8mb4&parseTime=True&loc=Local"
   max_open_conns: 20
@@ -15,7 +15,14 @@ jwt:
   secret: "your-jwt-secret-key"
   access_expire: 7200 # 2小时
   refresh_expire: 604800 # 7天
-logger:
-  secret: "your-jwt-secret-key"
-  access_expire: 7200 # 2小时
-  refresh_expire: 604800 # 7天
+log:
+  level: "info"
+  enable_console: false
+  filename: "./logs/app_info.log"
+  max_size: 100
+  max_backups: 10
+  max_age: 30
+  compress: true
+  encoding: "json"
+  enable_caller: true
+  stacktrace_level: "error"

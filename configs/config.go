@@ -11,6 +11,7 @@ type Config struct {
 	MySQL MySQLConfig `mapstructure:"mysql"`
 	Redis RedisConfig `mapstructure:"redis"`
 	JWT   JWTConfig   `mapstructure:"jwt"`
+	Log   LogConfig   `mapstructure:"log"`
 }
 
 type AppConfig struct {
@@ -18,7 +19,11 @@ type AppConfig struct {
 	Env  string `mapstructure:"env"`
 }
 
-type LoggerConfig struct {
+type LogConfig struct {
+	Level         string `mapstructure:"level"`
+	Encoding      string `mapstructure:"encoding"`
+	EnableConsole bool   `mapstructure:"enable_console"`
+	Filename      string `mapstructure:"filename"`
 }
 
 type MySQLConfig struct {
@@ -57,4 +62,14 @@ func InitConfig(configPath string) error {
 		return fmt.Errorf("解析配置文件失败: %w", err)
 	}
 	return nil
+}
+
+// IsDev 是否开发环境
+func IsDev() bool {
+	return GlobalConfig.App.Env == "development" || GlobalConfig.App.Env == "dev"
+}
+
+// IsProd 是否生产环境
+func IsProd() bool {
+	return GlobalConfig.App.Env == "production" || GlobalConfig.App.Env == "prod"
 }
