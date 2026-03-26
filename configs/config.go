@@ -18,6 +18,9 @@ type AppConfig struct {
 	Env  string `mapstructure:"env"`
 }
 
+type LoggerConfig struct {
+}
+
 type MySQLConfig struct {
 	DSN             string `mapstructure:"dsn"`
 	MaxOpenConns    int    `mapstructure:"max_open_conns"`

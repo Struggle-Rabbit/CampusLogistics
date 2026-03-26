@@ -15,3 +15,7 @@ jwt:
   secret: "your-jwt-secret-key"
   access_expire: 7200 # 2小时
   refresh_expire: 604800 # 7天
+logger:
+  secret: "your-jwt-secret-key"
+  access_expire: 7200 # 2小时
+  refresh_expire: 604800 # 7天
