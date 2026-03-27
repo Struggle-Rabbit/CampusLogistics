@@ -2,6 +2,8 @@ package configs
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -20,10 +22,16 @@ type AppConfig struct {
 }
 
 type LogConfig struct {
-	Level         string `mapstructure:"level"`
-	Encoding      string `mapstructure:"encoding"`
-	EnableConsole bool   `mapstructure:"enable_console"`
-	Filename      string `mapstructure:"filename"`
+	Level           string `mapstructure:"level"`            // 日志级别: debug/info/warn/error/fatal
+	Encoding        string `mapstructure:"encoding"`         // 编码格式: console(开发)/json(生产)
+	EnableConsole   bool   `mapstructure:"enable_console"`   // 是否输出到控制台
+	Filename        string `mapstructure:"filename"`         // 日志文件路径（为空则不输出文件）
+	MaxSize         int    `mapstructure:"max_size"`         // 单个文件最大大小(MB)
+	MaxBackups      int    `mapstructure:"max_backups"`      // 保留旧文件最大数量
+	MaxAge          int    `mapstructure:"max_age"`          // 保留旧文件最大天数
+	Compress        bool   `mapstructure:"compress"`         // 是否压缩旧文件
+	EnableCaller    bool   `mapstructure:"enable_caller"`    // 是否显示调用者信息
+	StacktraceLevel string `mapstructure:"stacktrace_level"` // 记录堆栈的最低级别
 }
 
 type MySQLConfig struct {
@@ -50,10 +58,20 @@ type JWTConfig struct {
 var GlobalConfig *Config
 
 // InitConfig 初始化配置
-func InitConfig(configPath string) error {
-	viper.SetConfigFile(configPath)
-	viper.SetConfigType("yaml")
-	if err := viper.ReadInConfig(); err != nil {
+func InitConfig() error {
+	env := os.Getenv("ENV")
+	if env == "" {
+		env = "dev"
+	}
+
+	v := viper.New()
+	v.SetConfigName(fmt.Sprintf("config-%s", env))
+	v.SetConfigType("yaml")
+	v.AddConfigPath("configs")
+	v.AutomaticEnv()
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	if err := v.ReadInConfig(); err != nil {
 		return fmt.Errorf("读取配置文件失败: %w", err)
 	}
 
