@@ -59,23 +59,26 @@ var GlobalConfig *Config
 
 // InitConfig 初始化配置
 func InitConfig() error {
+	// 获取命令行中ENV的值
 	env := os.Getenv("ENV")
+	// 若值等于空则默认是开发环境dev
 	if env == "" {
 		env = "dev"
 	}
 
-	v := viper.New()
-	v.SetConfigName(fmt.Sprintf("config-%s", env))
-	v.SetConfigType("yaml")
-	v.AddConfigPath("configs")
-	v.AutomaticEnv()
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	v := viper.New()                                   // 待学习
+	v.SetConfigName(fmt.Sprintf("config-%s", env))     // 设置配置文件是哪一个，根据获取道德ENV的值来确定
+	v.SetConfigType("yaml")                            // 设置配置文件类型
+	v.AddConfigPath("configs")                         // 设置需要读取的配置文件的路径，在哪个文件夹下
+	v.AutomaticEnv()                                   // 待学习
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_")) // 覆盖配置中下划线替换为点，类似于DB_Name替换为DB.Name  待学习
 
-	if err := v.ReadInConfig(); err != nil {
+	if err := v.ReadInConfig(); err != nil { // 读取文件，读取配置
 		return fmt.Errorf("读取配置文件失败: %w", err)
 	}
 
 	GlobalConfig = &Config{}
+	// 解析文件配置，映射到结构体中
 	if err := v.Unmarshal(GlobalConfig); err != nil {
 		return fmt.Errorf("解析配置文件失败: %w", err)
 	}

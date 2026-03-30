@@ -1,12 +1,16 @@
 package router
 
 import (
+	"fmt"
+	"github.com/Struggle-Rabbit/CampusLogistics/configs"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/middleware"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/pkg/logger"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 // InitRouter 初始化总路由
-func InitRouter() *gin.Engine {
+func initRouter() *gin.Engine {
 	// 初始化 gin
 	r := gin.Default()
 
@@ -33,4 +37,20 @@ func InitRouter() *gin.Engine {
 	}
 
 	return r
+}
+
+func Run() error {
+	// 注册路由
+	fmt.Println("注册路由....")
+	r := initRouter()
+	logger.Info("服务启动",
+		zap.String("env", configs.GlobalConfig.App.Env),
+		zap.Int("port", configs.GlobalConfig.App.Port),
+	)
+
+	fmt.Println("服务启动中....")
+	if err := r.Run(fmt.Sprintf(":%d", configs.GlobalConfig.App.Port)); err != nil {
+		return err
+	}
+	return nil
 }

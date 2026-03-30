@@ -5,36 +5,23 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Struggle-Rabbit/CampusLogistics/configs"
 	"gopkg.in/natefinch/lumberjack.v2"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"gopkg.in/yaml.v3"
 )
 
 // 全局 Logger 实例
 var (
-	Log   *zap.Logger
-	Sugar *zap.SugaredLogger
+	Log       *zap.Logger
+	Sugar     *zap.SugaredLogger
+	LogConfig = configs.GlobalConfig.Log
 )
 
-// Config 日志配置结构（支持 YAML 解析）
-type Config struct {
-	Level           string `yaml:"level"`            // 日志级别: debug/info/warn/error/fatal
-	EnableConsole   bool   `yaml:"enable_console"`   // 是否输出到控制台
-	Filename        string `yaml:"filename"`         // 日志文件路径（为空则不输出文件）
-	MaxSize         int    `yaml:"max_size"`         // 单个文件最大大小(MB)
-	MaxBackups      int    `yaml:"max_backups"`      // 保留旧文件最大数量
-	MaxAge          int    `yaml:"max_age"`          // 保留旧文件最大天数
-	Compress        bool   `yaml:"compress"`         // 是否压缩旧文件
-	Encoding        string `yaml:"encoding"`         // 编码格式: console(开发)/json(生产)
-	EnableCaller    bool   `yaml:"enable_caller"`    // 是否显示调用者信息
-	StacktraceLevel string `yaml:"stacktrace_level"` // 记录堆栈的最低级别
-}
-
 // NewDevelopmentConfig 开发环境预设配置
-func NewDevelopmentConfig() *Config {
-	return &Config{
+func NewDevelopmentConfig() *configs.LogConfig {
+	return &configs.LogConfig{
 		Level:           "debug",
 		EnableConsole:   true,
 		Filename:        "",
@@ -45,8 +32,8 @@ func NewDevelopmentConfig() *Config {
 }
 
 // NewProductionConfig 生产环境预设配置
-func NewProductionConfig() *Config {
-	return &Config{
+func NewProductionConfig() *configs.LogConfig {
+	return &configs.LogConfig{
 		Level:           "info",
 		EnableConsole:   false,
 		Filename:        "./logs/app.log",
@@ -60,23 +47,23 @@ func NewProductionConfig() *Config {
 	}
 }
 
-// InitFromFile 从 YAML 文件初始化日志
-func InitFromFile(configPath string) error {
-	data, err := os.ReadFile(configPath)
-	if err != nil {
-		return fmt.Errorf("读取配置文件失败: %w", err)
-	}
-
-	var cfg Config
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return fmt.Errorf("解析配置文件失败: %w", err)
-	}
-
-	return Init(&cfg)
-}
-
 // Init 从 Config 结构初始化日志
-func Init(cfg *Config) error {
+func Init() error {
+
+	// 日志初始化
+	fmt.Println("日志初始化中....")
+	var cfg *configs.LogConfig
+	if configs.IsDev() {
+		cfg = NewDevelopmentConfig()
+	} else {
+		cfg = &configs.LogConfig{
+			Level:         LogConfig.Level,
+			EnableConsole: LogConfig.EnableConsole,
+			Filename:      LogConfig.Filename,
+			Encoding:      LogConfig.Encoding,
+		}
+	}
+
 	// 1. 解析日志级别
 	logLevel := parseLevel(cfg.Level, zapcore.InfoLevel)
 	stackLevel := parseLevel(cfg.StacktraceLevel, zapcore.ErrorLevel)
@@ -137,7 +124,7 @@ func parseLevel(levelStr string, defaultLevel zapcore.Level) zapcore.Level {
 	return level
 }
 
-func buildEncoder(cfg *Config) zapcore.Encoder {
+func buildEncoder(cfg *configs.LogConfig) zapcore.Encoder {
 	encoderConfig := zapcore.EncoderConfig{
 		TimeKey:        "time",
 		LevelKey:       "level",
@@ -159,7 +146,7 @@ func buildEncoder(cfg *Config) zapcore.Encoder {
 	return zapcore.NewJSONEncoder(encoderConfig)
 }
 
-func buildWriteSyncer(cfg *Config) (zapcore.WriteSyncer, error) {
+func buildWriteSyncer(cfg *configs.LogConfig) (zapcore.WriteSyncer, error) {
 	var writers []zapcore.WriteSyncer
 
 	// 控制台输出
