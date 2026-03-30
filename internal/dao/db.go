@@ -33,7 +33,7 @@ func InitDB() error {
 		dbErr error
 	)
 	if configs.IsDev() {
-		db, dbErr = gorm.Open(sqlite.Open("dev.db"), &gorm.Config{
+		db, dbErr = gorm.Open(sqlite.Open("scripts/sql/dev.db"), &gorm.Config{
 			Logger: newLogger,
 		})
 
