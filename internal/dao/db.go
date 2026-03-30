@@ -8,6 +8,7 @@ import (
 	"github.com/Struggle-Rabbit/CampusLogistics/configs"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao/model"
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -27,11 +28,23 @@ func InitDB() error {
 		},
 	)
 
-	db, err := gorm.Open(mysql.Open(cfg.DSN), &gorm.Config{
-		Logger: newLogger,
-	})
-	if err != nil {
-		return err
+	var (
+		db    *gorm.DB
+		dbErr error
+	)
+	if configs.IsDev() {
+		db, dbErr = gorm.Open(sqlite.Open("dev.db"), &gorm.Config{
+			Logger: newLogger,
+		})
+
+	} else {
+		db, dbErr = gorm.Open(mysql.Open(cfg.DSN), &gorm.Config{
+			Logger: newLogger,
+		})
+	}
+
+	if dbErr != nil {
+		return dbErr
 	}
 
 	sqlDB, err := db.DB()
@@ -43,13 +56,20 @@ func InitDB() error {
 	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
 	sqlDB.SetConnMaxLifetime(time.Duration(cfg.ConnMaxLifetime) * time.Second)
 
-	if configs.GlobalConfig.App.Env == "dev" {
+	if configs.IsDev() {
 		if err := db.AutoMigrate(
 			&model.SysUser{},
 			&model.SysRole{},
 			&model.SysPermission{},
+			&model.SysRolePermission{},
 			&model.RepairOrder{},
-			// 其他模型...
+			&model.CampusBuilding{},
+			&model.DormRoom{},
+			&model.DormUser{},
+			&model.DormUtility{},
+			&model.Notice{},
+			&model.RepairRecord{},
+			&model.SysOperationLog{},
 		); err != nil {
 			return err
 		}

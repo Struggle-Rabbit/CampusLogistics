@@ -1,11 +1,6 @@
 app:
   port: 8080
   env: "dev" # 环境（dev/test/prod）
-mysql:
-  dsn: "root:密码@tcp(127.0.0.1:3306)/campus_logistics?charset=utf8mb4&parseTime=True&loc=Local"
-  max_open_conns: 20
-  max_idle_conns: 10
-  conn_max_lifetime: 3600
 redis:
   addr: "127.0.0.1:6379"
   password: ""

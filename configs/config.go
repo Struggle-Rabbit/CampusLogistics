@@ -76,9 +76,11 @@ func InitConfig() error {
 	}
 
 	GlobalConfig = &Config{}
-	if err := viper.Unmarshal(GlobalConfig); err != nil {
+	if err := v.Unmarshal(GlobalConfig); err != nil {
 		return fmt.Errorf("解析配置文件失败: %w", err)
 	}
+	// bs, _ := json.MarshalIndent(GlobalConfig, "", "  ")
+	// fmt.Println("全局配置：\n", string(bs))
 	return nil
 }
 

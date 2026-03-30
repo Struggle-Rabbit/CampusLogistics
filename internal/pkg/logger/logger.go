@@ -2,9 +2,10 @@ package logger
 
 import (
 	"fmt"
-	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 	"path/filepath"
+
+	"gopkg.in/natefinch/lumberjack.v2"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
