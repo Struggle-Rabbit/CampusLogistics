@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao/model"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )

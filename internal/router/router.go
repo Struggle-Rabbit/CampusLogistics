@@ -2,9 +2,10 @@ package router
 
 import (
 	"fmt"
-	"github.com/Struggle-Rabbit/CampusLogistics/configs"
+
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/config"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/middleware"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/pkg/logger"
+	"github.com/Struggle-Rabbit/CampusLogistics/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -16,10 +17,10 @@ func initRouter() *gin.Engine {
 
 	// 全局中间件
 	r.Use(
-		middleware.CORS(),      // 跨域
-		middleware.Logger(),    // 日志
-		middleware.RequestID(), // 请求ID
 		middleware.Recovery(),  // 崩溃恢复
+		middleware.RequestID(), // 请求ID
+		middleware.Logger(),    // 日志
+		middleware.CORS(),      // 跨域
 	)
 
 	// ===================== 路由分组 =====================
@@ -44,12 +45,12 @@ func Run() error {
 	fmt.Println("注册路由....")
 	r := initRouter()
 	logger.Info("服务启动",
-		zap.String("env", configs.GlobalConfig.App.Env),
-		zap.Int("port", configs.GlobalConfig.App.Port),
+		zap.String("env", config.GlobalConfig.App.Env),
+		zap.Int("port", config.GlobalConfig.App.Port),
 	)
 
 	fmt.Println("服务启动中....")
-	if err := r.Run(fmt.Sprintf(":%d", configs.GlobalConfig.App.Port)); err != nil {
+	if err := r.Run(fmt.Sprintf(":%d", config.GlobalConfig.App.Port)); err != nil {
 		return err
 	}
 	return nil

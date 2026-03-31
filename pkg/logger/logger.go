@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Struggle-Rabbit/CampusLogistics/configs"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/config"
 	"gopkg.in/natefinch/lumberjack.v2"
 
 	"go.uber.org/zap"
@@ -16,12 +16,12 @@ import (
 var (
 	Log       *zap.Logger
 	Sugar     *zap.SugaredLogger
-	LogConfig = configs.GlobalConfig.Log
+	LogConfig = config.GlobalConfig.Log
 )
 
 // NewDevelopmentConfig 开发环境预设配置
-func NewDevelopmentConfig() *configs.LogConfig {
-	return &configs.LogConfig{
+func NewDevelopmentConfig() *config.LogConfig {
+	return &config.LogConfig{
 		Level:           "debug",
 		EnableConsole:   true,
 		Filename:        "",
@@ -32,8 +32,8 @@ func NewDevelopmentConfig() *configs.LogConfig {
 }
 
 // NewProductionConfig 生产环境预设配置
-func NewProductionConfig() *configs.LogConfig {
-	return &configs.LogConfig{
+func NewProductionConfig() *config.LogConfig {
+	return &config.LogConfig{
 		Level:           "info",
 		EnableConsole:   false,
 		Filename:        "./logs/app.log",
@@ -52,11 +52,11 @@ func Init() error {
 
 	// 日志初始化
 	fmt.Println("日志初始化中....")
-	var cfg *configs.LogConfig
-	if configs.IsDev() {
+	var cfg *config.LogConfig
+	if config.IsDev() {
 		cfg = NewDevelopmentConfig()
 	} else {
-		cfg = &configs.LogConfig{
+		cfg = &config.LogConfig{
 			Level:         LogConfig.Level,
 			EnableConsole: LogConfig.EnableConsole,
 			Filename:      LogConfig.Filename,
@@ -124,7 +124,7 @@ func parseLevel(levelStr string, defaultLevel zapcore.Level) zapcore.Level {
 	return level
 }
 
-func buildEncoder(cfg *configs.LogConfig) zapcore.Encoder {
+func buildEncoder(cfg *config.LogConfig) zapcore.Encoder {
 	encoderConfig := zapcore.EncoderConfig{
 		TimeKey:        "time",
 		LevelKey:       "level",
@@ -146,7 +146,7 @@ func buildEncoder(cfg *configs.LogConfig) zapcore.Encoder {
 	return zapcore.NewJSONEncoder(encoderConfig)
 }
 
-func buildWriteSyncer(cfg *configs.LogConfig) (zapcore.WriteSyncer, error) {
+func buildWriteSyncer(cfg *config.LogConfig) (zapcore.WriteSyncer, error) {
 	var writers []zapcore.WriteSyncer
 
 	// 控制台输出

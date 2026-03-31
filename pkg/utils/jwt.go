@@ -1,10 +1,11 @@
-package jwt
+package utils
 
 import (
 	"errors"
 	"time"
 
-	"github.com/Struggle-Rabbit/CampusLogistics/configs"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/config"
+	"github.com/Struggle-Rabbit/CampusLogistics/pkg/constant"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -19,7 +20,7 @@ type CustomClaims struct {
 
 // GenerateToken 生成 Access Token 和 Refresh Token
 func GenerateToken(userID uint, username string, roleIDs []uint) (accessToken, refreshToken string, err error) {
-	cfg := configs.GlobalConfig.JWT
+	cfg := config.GlobalConfig.JWT
 
 	// Access Token
 	accessClaims := CustomClaims{
@@ -52,7 +53,7 @@ func GenerateToken(userID uint, username string, roleIDs []uint) (accessToken, r
 
 // ParseToken 解析 Token
 func ParseToken(tokenString string) (*CustomClaims, error) {
-	cfg := configs.GlobalConfig.JWT
+	cfg := config.GlobalConfig.JWT
 	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(cfg.Secret), nil
 	})
@@ -62,7 +63,7 @@ func ParseToken(tokenString string) (*CustomClaims, error) {
 
 	claims, ok := token.Claims.(*CustomClaims)
 	if !ok || !token.Valid {
-		return nil, errors.New("无效的token")
+		return nil, errors.New(constant.MsgInvalidToken)
 	}
 	return claims, nil
 }

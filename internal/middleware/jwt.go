@@ -3,8 +3,8 @@ package middleware
 import (
 	"strings"
 
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/pkg/jwt"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/pkg/response"
+	"github.com/Struggle-Rabbit/CampusLogistics/pkg/constant"
+	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,7 +14,7 @@ func JWTAuth() gin.HandlerFunc {
 		// 1. 获取 header 里的 Authorization
 		auth := c.GetHeader("Authorization")
 		if auth == "" {
-			response.Unauth(c, "请先登录")
+			utils.Unauth(c, constant.MsgPleaseLoginFirst)
 			c.Abort()
 			return
 		}
@@ -22,15 +22,15 @@ func JWTAuth() gin.HandlerFunc {
 		// 格式：Bearer token
 		parts := strings.SplitN(auth, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
-			response.Unauth(c, "token 格式错误")
+			utils.Unauth(c, constant.MsgTokenFormatError)
 			c.Abort()
 			return
 		}
 
 		// 2. 解析 token
-		claims, err := jwt.ParseToken(parts[1])
+		claims, err := utils.ParseToken(parts[1])
 		if err != nil {
-			response.Unauth(c, "登录已过期或无效")
+			utils.Unauth(c, constant.MsgLoginExpiredOrInvalid)
 			c.Abort()
 			return
 		}

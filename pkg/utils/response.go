@@ -1,8 +1,9 @@
-package response
+package utils
 
 import (
 	"net/http"
 
+	"github.com/Struggle-Rabbit/CampusLogistics/pkg/constant"
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,22 +12,14 @@ type Response struct {
 	Code int         `json:"code"`
 	Msg  string      `json:"msg"`
 	Data interface{} `json:"data,omitempty"`
+	Err  interface{} `json:"err,omitempty"`
 }
-
-// 状态码定义
-const (
-	CodeSuccess = 200
-	CodeFail    = 400
-	CodeUnauth  = 401
-	CodeForbid  = 403
-	CodeError   = 500
-)
 
 // Success 成功响应
 func Success(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, Response{
-		Code: CodeSuccess,
-		Msg:  "操作成功",
+		Code: constant.CodeSuccess,
+		Msg:  constant.MsgSuccess,
 		Data: data,
 	})
 }
@@ -34,23 +27,24 @@ func Success(c *gin.Context, data interface{}) {
 // Fail 业务失败响应
 func Fail(c *gin.Context, msg string) {
 	c.JSON(http.StatusOK, Response{
-		Code: CodeFail,
+		Code: constant.CodeFail,
 		Msg:  msg,
 	})
 }
 
 // Error 系统错误响应
-func Error(c *gin.Context, msg string) {
+func Error(c *gin.Context, msg string, err error) {
 	c.JSON(http.StatusInternalServerError, Response{
-		Code: CodeError,
+		Code: constant.CodeError,
 		Msg:  msg,
+		Err:  err,
 	})
 }
 
 // Unauth 未登录响应
 func Unauth(c *gin.Context, msg string) {
 	c.JSON(http.StatusUnauthorized, Response{
-		Code: CodeUnauth,
+		Code: constant.CodeUnauth,
 		Msg:  msg,
 	})
 }

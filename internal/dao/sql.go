@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/Struggle-Rabbit/CampusLogistics/configs"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao/model"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/config"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -16,7 +16,7 @@ import (
 var DB *gorm.DB
 
 func InitDB() error {
-	cfg := configs.GlobalConfig.MySQL
+	cfg := config.GlobalConfig.MySQL
 
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
@@ -32,7 +32,7 @@ func InitDB() error {
 		db    *gorm.DB
 		dbErr error
 	)
-	if configs.IsDev() {
+	if config.IsDev() {
 		db, dbErr = gorm.Open(sqlite.Open("scripts/sql/dev.db"), &gorm.Config{
 			Logger: newLogger,
 		})
@@ -56,7 +56,7 @@ func InitDB() error {
 	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
 	sqlDB.SetConnMaxLifetime(time.Duration(cfg.ConnMaxLifetime) * time.Second)
 
-	if configs.IsDev() {
+	if config.IsDev() {
 		if err := db.AutoMigrate(
 			&model.SysUser{},
 			&model.SysRole{},

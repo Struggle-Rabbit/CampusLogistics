@@ -2,17 +2,18 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/router"
 
-	"github.com/Struggle-Rabbit/CampusLogistics/configs"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/config"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/pkg/logger"
+	"github.com/Struggle-Rabbit/CampusLogistics/pkg/logger"
 )
 
 func main() {
 	// 配置初始化
 	fmt.Println("配置初始化中....")
-	if err := configs.InitConfig(); err != nil {
+	if err := config.InitConfig(); err != nil {
 		panic(fmt.Sprintf("初始化配置失败: %v", err))
 	}
 
@@ -22,7 +23,7 @@ func main() {
 	defer logger.Sync()
 
 	// 数据库初始化
-	fmt.Printf("数据库初始化中....  当前环境: %s\n", configs.GlobalConfig.App.Env)
+	fmt.Printf("数据库初始化中....  当前环境: %s\n", config.GlobalConfig.App.Env)
 	if err := dao.InitDB(); err != nil {
 		panic(fmt.Sprintf("初始化数据库失败: %v", err))
 	}
