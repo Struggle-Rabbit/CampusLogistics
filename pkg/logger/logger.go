@@ -14,9 +14,8 @@ import (
 
 // 全局 Logger 实例
 var (
-	Log       *zap.Logger
-	Sugar     *zap.SugaredLogger
-	LogConfig = config.GlobalConfig.Log
+	Log   *zap.Logger
+	Sugar *zap.SugaredLogger
 )
 
 // NewDevelopmentConfig 开发环境预设配置
@@ -47,10 +46,11 @@ func NewProductionConfig() *config.LogConfig {
 	}
 }
 
-// Init 从 Config 结构初始化日志
-func Init() error {
+// InitLogger 从 Config 结构初始化日志
+func InitLogger() error {
 
 	// 日志初始化
+	var LogConfig = config.GlobalConfig.Log
 	fmt.Println("日志初始化中....")
 	var cfg *config.LogConfig
 	if config.IsDev() {
