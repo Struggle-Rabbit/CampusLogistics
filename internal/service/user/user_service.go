@@ -12,13 +12,13 @@ import (
 
 // UserService 用户服务
 type UserService struct {
-	DB *gorm.DB
+	db *gorm.DB
 }
 
 // NewUserService 创建用户服务实例
-func NewUserService() *UserService {
+func NewUserService(db *gorm.DB) *UserService {
 	return &UserService{
-		DB: dao.DB,
+		db,
 	}
 }
 
@@ -26,7 +26,7 @@ func NewUserService() *UserService {
 func (s *UserService) Register(req *dto.RegisterReq) error {
 	// 1. 检查学号/工号是否已存在
 	var existUser model.SysUser
-	err := s.DB.Where("user_id = ? OR phone = ?", req.UserID, req.Phone).First(&existUser).Error
+	err := s.db.Where("user_number = ? OR phone = ?", req.UserCode, req.Phone).First(&existUser).Error
 	if err == nil {
 		return errors.New("学号/工号或手机号已注册")
 	}
@@ -42,7 +42,7 @@ func (s *UserService) Register(req *dto.RegisterReq) error {
 
 	// 3. 创建用户（默认分配普通用户角色）
 	user := &model.SysUser{
-		UserID:   req.UserID,
+		UserCode: req.UserCode,
 		Name:     req.Name,
 		Phone:    req.Phone,
 		Password: string(hashedPassword),
