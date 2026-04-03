@@ -60,8 +60,10 @@ func InitDB() error {
 		if err := db.AutoMigrate(
 			&model.SysUser{},
 			&model.SysRole{},
-			&model.SysPermission{},
-			&model.SysRolePermission{},
+			&model.SysUserRole{},
+			&model.SysMenu{},
+			&model.SysRoleMenu{},
+			&model.SysOperationLog{},
 			&model.RepairOrder{},
 			&model.CampusBuilding{},
 			&model.DormRoom{},
@@ -69,7 +71,6 @@ func InitDB() error {
 			&model.DormUtility{},
 			&model.Notice{},
 			&model.RepairRecord{},
-			&model.SysOperationLog{},
 		); err != nil {
 			return err
 		}

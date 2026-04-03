@@ -37,7 +37,7 @@ func JWTAuth() gin.HandlerFunc {
 
 		// 3. 把用户信息存到 gin context
 		c.Set("userID", claims.UserID)
-		c.Set("username", claims.Username)
+		// c.Set("username", claims.Username)
 
 		// 继续执行后续接口
 		c.Next()
