@@ -4,40 +4,28 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"sync"
 
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/constant"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 )
 
-var (
-	validate *validator.Validate
-	once     sync.Once
-)
-
-// GetValidator 获取全局校验器
-func GetValidator() *validator.Validate {
-	once.Do(func() {
-		validate = validator.New()
-		// 注册自定义校验器
-		_ = validate.RegisterValidation("mobile", ValidateMobile)
-	})
-	return validate
+func InitValidator() error {
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		// 注册 mobile
+		if err := v.RegisterValidation("mobile", ValidateMobile); err != nil {
+			return err
+		}
+		// 在这里继续注册其他规则...
+	}
+	return nil
 }
 
 // BindAndValidate 绑定并校验参数
 func ShouldBind(c *gin.Context, obj any) bool {
 	// 绑定 JSON/Form
 	if err := c.ShouldBind(obj); err != nil {
-		msg := Translate(err)
-		Fail(c, msg)
-		return false
-	}
-
-	// 手动校验
-	v := GetValidator()
-	if err := v.Struct(obj); err != nil {
 		msg := Translate(err)
 		Fail(c, msg)
 		return false

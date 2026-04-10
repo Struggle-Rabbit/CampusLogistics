@@ -2,7 +2,7 @@ package model
 
 // RepairOrder 报修单表
 type RepairOrder struct {
-	BaseModel
+	BaseModel   `gorm:"embedded"`
 	OrderNo     string   `gorm:"column:order_no;uniqueIndex;not null;size:32" json:"order_no"` // 报修单号（唯一）
 	UserID      string   `gorm:"column:user_id;not null;size:50;index" json:"user_id"`         // 提交人学号/工号
 	RepairType  int      `gorm:"column:repair_type;not null;index" json:"repair_type"`         // 报修类型：1-水电 2-家具 3-网络 4-其他

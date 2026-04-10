@@ -2,8 +2,8 @@ package model
 
 // DormRoom 宿舍表
 type DormRoom struct {
-	BaseModel
-	BuildingID   uint   `gorm:"column:building_id;not null;index" json:"building_id"`         // 楼栋ID
+	BaseModel    `gorm:"embedded"`
+	BuildingID   string `gorm:"column:building_id;not null;index" json:"building_id"`         // 楼栋ID
 	RoomNo       string `gorm:"column:room_no;not null;size:50;index" json:"room_no"`         // 宿舍号
 	RoomType     int    `gorm:"column:room_type;not null" json:"room_type"`                   // 宿舍类型：1-4人间 2-6人间 3-其他
 	MaxCount     int    `gorm:"column:max_count;not null" json:"max_count"`                   // 可住人数

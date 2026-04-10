@@ -16,10 +16,24 @@ type Response struct {
 }
 
 // Success 成功响应
-func Success(c *gin.Context, data interface{}) {
+func Success(c *gin.Context, args ...interface{}) {
+
+	msg := constant.MsgSuccess
+	var data interface{} = nil
+
+	switch len(args) {
+	case 1:
+		data = args[0]
+	case 2:
+		if m, ok := args[1].(string); ok {
+			msg = m
+		}
+		data = args[0]
+	}
+
 	c.JSON(http.StatusOK, Response{
 		Code: constant.CodeSuccess,
-		Msg:  constant.MsgSuccess,
+		Msg:  msg,
 		Data: data,
 	})
 }

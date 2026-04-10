@@ -6,22 +6,24 @@ import (
 	"time"
 
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/go-viper/mapstructure/v2"
 	"gorm.io/gorm"
 )
 
 // UserService 用户服务
 type UserService struct {
-	db *gorm.DB
+	app *app.App
 }
 
 // NewUserService 创建用户服务实例
-func NewUserService(db *gorm.DB) *UserService {
+func NewUserService(app *app.App) *UserService {
 	return &UserService{
-		db,
+		app: app,
 	}
 }
 
@@ -29,7 +31,9 @@ func NewUserService(db *gorm.DB) *UserService {
 func (s *UserService) Register(req *dto.RegisterReq) error {
 	// 检查是否已存在
 	var existUser model.SysUser
-	err := s.db.Where("mobile = ?", req.Mobile).First(&existUser).Error
+	var total int64
+	s.app.DB.Count(&total)
+	err := s.app.DB.Where("mobile = ?", req.Mobile).First(&existUser).Error
 	if err == nil {
 		return errors.New("手机号已注册")
 	}
@@ -37,38 +41,37 @@ func (s *UserService) Register(req *dto.RegisterReq) error {
 		return err
 	}
 
-	// 密码 bcrypt 加密
 	hashedPassword, err := utils.HashedPasswordFunc(req.Password)
 	if err != nil {
 		return err
 	}
-	// 获取当前数据库中数据数量
-	var userList []model.SysUser
-	s.db.Find(&userList)
 
-	// 生成根据时间的自增工号
-	userCode := fmt.Sprintf("%s00%d", time.Now().Format("20060102"), len(userList)+1)
-	// 创建用户（默认分配普通用户角色）
-	user := &model.SysUser{
-		UserCode: userCode,
-		Name:     req.Name,
-		Mobile:   req.Mobile,
-		Password: hashedPassword,
-		Status:   1, // 1-启用
+	var user model.SysUser
+	if err := mapstructure.Decode(req, &user); err != nil {
+		return err
 	}
-	return s.db.Create(user).Error
+	// 生成根据时间的自增工号
+	user.Status = 1
+	user.UserCode = fmt.Sprintf("%s00%d", time.Now().Format("20060102"), total+1)
+	user.Password = hashedPassword
+
+	// 创建用户（默认分配普通用户角色）
+	// user := &model.SysUser{
+	// 	UserCode: userCode,
+	// 	Name:     req.Name,
+	// 	Mobile:   req.Mobile,
+	// 	Password: hashedPassword,
+	// 	Status:   1, // 1-启用
+	// }
+	return s.app.DB.Create(user).Error
 }
 
 func (s *UserService) Login(req *dto.LoginReq) (*dto.LoginResult, error) {
 	var sysUser model.SysUser
-	err := s.db.Where("mobile = ? OR user_code = ?", req.Account).First(&sysUser).Error
+	err := s.app.DB.Where("mobile = ? OR user_code = ?", req.Account, req.Account).First(&sysUser).Error
 	if err == nil {
-		// 密码 bcrypt 加密
-		hashedPassword, pwd_err := utils.HashedPasswordFunc(req.Password)
-		if pwd_err != nil {
-			return nil, pwd_err
-		}
-		if sysUser.Password != hashedPassword {
+		// 密码校验
+		if err := utils.VerifyPasswordFunc(sysUser.Password, req.Password); err != nil {
 			return nil, errors.New("密码不正确")
 		}
 	} else {
@@ -95,7 +98,7 @@ func (s *UserService) GetUserInfo(c *gin.Context) (*dto.UserInfoResult, error) {
 	userId, exists := c.Get("userID")
 	var sysUser dto.UserInfoResult
 	if exists {
-		err := s.db.First(&sysUser, userId).Error
+		err := s.app.DB.First(&sysUser, userId).Error
 		if err == nil {
 			return &sysUser, nil
 		}
@@ -112,11 +115,11 @@ func (s *UserService) GetUserInfo(c *gin.Context) (*dto.UserInfoResult, error) {
 func (s *UserService) GetListByPage(req *dto.UserListPageReq) (*dto.PageResult, error) {
 	var list []model.SysUser
 	var total int64
-	if err := s.db.Model(&model.SysUser{}).Count(&total).Error; err != nil {
+	if err := s.app.DB.Model(&model.SysUser{}).Count(&total).Error; err != nil {
 		return nil, err
 	}
 
-	if err := s.db.Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Find(&list).Error; err != nil {
+	if err := s.app.DB.Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Find(&list).Error; err != nil {
 		return nil, err
 	}
 

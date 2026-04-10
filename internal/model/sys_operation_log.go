@@ -2,7 +2,7 @@ package model
 
 // SysOperationLog 操作日志表
 type SysOperationLog struct {
-	BaseModel
+	BaseModel `gorm:"embedded"`
 	UserID    string `gorm:"column:user_id;size:50;index" json:"user_id"`         // 操作人学号/工号（未登录为空）
 	Operation string `gorm:"column:operation;not null;size:100" json:"operation"` // 操作描述
 	Path      string `gorm:"column:path;size:255" json:"path"`                    // 接口路径

@@ -2,37 +2,50 @@ package main
 
 import (
 	"fmt"
-	"time"
+
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/config"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/router"
+	"github.com/Struggle-Rabbit/CampusLogistics/pkg/logger"
+	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 )
 
 func main() {
-	now := time.Now().Format("20060102")
-	userCode := fmt.Sprintf("%s00%d", now, 1)
-	fmt.Println(userCode)
-	// // 配置初始化
-	// fmt.Println("配置初始化中....")
-	// if err := config.InitConfig(); err != nil {
-	// 	panic(fmt.Sprintf("初始化配置失败: %v", err))
+
+	// 初始化雪花算法
+	utils.InitSnowflake()
+
+	// 配置初始化
+	fmt.Println("配置初始化中....")
+	if err := config.InitConfig(); err != nil {
+		panic(fmt.Sprintf("初始化配置失败: %v", err))
+	}
+
+	if logErr := logger.InitLogger(); logErr != nil {
+		panic(fmt.Sprintf("初始化日志失败: %v", logErr))
+	}
+	defer logger.Sync()
+
+	if err := utils.InitValidator(); err != nil {
+		panic(fmt.Sprintf("初始化校验器失败: %v", err))
+	}
+
+	// 数据库初始化
+	fmt.Printf("数据库初始化中....  当前环境: %s\n", config.GlobalConfig.App.Env)
+	if err := dao.InitDB(); err != nil {
+		panic(fmt.Sprintf("初始化数据库失败: %v", err))
+	}
+
+	//初始化 Redis（可选，后续迭代添加）
+	// fmt.Println("初始化Redis....")
+	// if err := cache.InitRedis(); err != nil {
+	// 	panic(fmt.Sprintf("初始化Redis失败: %v", err))
 	// }
 
-	// if logErr := logger.InitLogger(); logErr != nil {
-	// 	panic(fmt.Sprintf("初始化日志失败: %v", logErr))
-	// }
-	// defer logger.Sync()
+	globalApp := app.NewApp(config.GlobalConfig, dao.DB)
 
-	// // 数据库初始化
-	// fmt.Printf("数据库初始化中....  当前环境: %s\n", config.GlobalConfig.App.Env)
-	// if err := dao.InitDB(); err != nil {
-	// 	panic(fmt.Sprintf("初始化数据库失败: %v", err))
-	// }
-
-	// //初始化 Redis（可选，后续迭代添加）
-	// // fmt.Println("初始化Redis....")
-	// // if err := cache.InitRedis(); err != nil {
-	// // 	panic(fmt.Sprintf("初始化Redis失败: %v", err))
-	// // }
-
-	// if err := router.Run(); err != nil {
-	// 	panic(fmt.Sprintf("服务启动失败: %v", err))
-	// }
+	if err := router.Run(globalApp); err != nil {
+		panic(fmt.Sprintf("服务启动失败: %v", err))
+	}
 }

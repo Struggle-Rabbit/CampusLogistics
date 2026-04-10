@@ -3,15 +3,18 @@ package router
 import (
 	"fmt"
 
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/config"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/controller/common"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/middleware"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 // InitRouter 初始化总路由
-func initRouter() *gin.Engine {
+func initRouter(app *app.App) *gin.Engine {
 	// 初始化 gin
 	r := gin.Default()
 
@@ -23,9 +26,15 @@ func initRouter() *gin.Engine {
 		middleware.CORS(),      // 跨域
 	)
 
+	srv := service.NewServiceProvider(app)
+
+	commonCtl := common.NewCommonController(srv)
+
 	// ===================== 路由分组 =====================
-	api := r.Group("/api")
+	api := r.Group("/api/v1")
 	{
+		api.POST("/register", commonCtl.Register)
+		api.POST("/login", commonCtl.Login)
 		// 需要Token的
 		api.Use(middleware.JWTAuth())
 		{
@@ -40,10 +49,11 @@ func initRouter() *gin.Engine {
 	return r
 }
 
-func Run() error {
+func Run(app *app.App) error {
 	// 注册路由
 	fmt.Println("注册路由....")
-	r := initRouter()
+	r := initRouter(app)
+
 	logger.Info("服务启动",
 		zap.String("env", config.GlobalConfig.App.Env),
 		zap.Int("port", config.GlobalConfig.App.Port),

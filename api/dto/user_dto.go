@@ -21,7 +21,7 @@ type RegisterReq struct {
 	Name     string `json:"name" binding:"required"`
 	Mobile   string `json:"mobile" binding:"required,mobile"`
 	Password string `json:"password" binding:"required,min=8,max=20"`
-	UserType string `json:"userType" binding:"required,oneof=1 2"`
+	UserType string `json:"userType" binding:"required,oneof=00 01 02"`
 }
 
 // LoginReq 登录请求参数

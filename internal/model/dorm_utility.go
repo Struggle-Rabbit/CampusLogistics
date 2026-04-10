@@ -2,8 +2,8 @@ package model
 
 // DormUtility 水电费表
 type DormUtility struct {
-	BaseModel
-	RoomID        uint    `gorm:"column:room_id;not null;index:idx_room_month" json:"room_id"`    // 宿舍ID
+	BaseModel     `gorm:"embedded"`
+	RoomID        string  `gorm:"column:room_id;not null;index:idx_room_month" json:"room_id"`    // 宿舍ID
 	Year          int     `gorm:"column:year;not null;index:idx_room_month" json:"year"`          // 年份
 	Month         int     `gorm:"column:month;not null;index:idx_room_month" json:"month"`        // 月份
 	WaterUsage    float64 `gorm:"column:water_usage;type:decimal(10,2)" json:"water_usage"`       // 用水量（吨）

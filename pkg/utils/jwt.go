@@ -12,12 +12,12 @@ import (
 
 // CustomClaims 自定义 JWT 声明
 type CustomClaims struct {
-	UserID uint `json:"user_id"`
+	UserID string `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken 生成 Access Token 和 Refresh Token
-func GenerateToken(userID uint) (accessToken, refreshToken string, err error) {
+func GenerateToken(userID string) (accessToken, refreshToken string, err error) {
 	cfg := config.GlobalConfig.JWT
 
 	// Access Token

@@ -1,5 +1,5 @@
 app:
-  port: 8080
+  port: 8880
   env: "dev" # 环境（dev/test/prod）
 redis:
   addr: "127.0.0.1:6379"
