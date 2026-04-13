@@ -41,16 +41,16 @@ type MenuListByPageReq struct {
 }
 
 type MenuResult struct {
-	ID          string       `json:"id"`
-	ParentID    string       `json:"parent_id"`
-	Name        string       `json:"name"`      // 菜单名称
-	Path        string       `json:"path"`      // 路由
-	Component   string       `json:"component"` // 前端组件
-	Type        int          `json:"type"`      // 1目录2菜单3按钮
-	Perms       string       `json:"perms"`     // 权限标识 sys:user:list
-	Icon        string       `json:"icon"`
-	Sort        int          `json:"sort"`
-	Status      int          `json:"status"`      // 状态
-	Description string       `json:"description"` // 描述
-	Childen     []MenuResult `json:"childen"`
+	ID          string        `json:"id"`
+	ParentID    string        `json:"parent_id"`
+	Name        string        `json:"name"`      // 菜单名称
+	Path        string        `json:"path"`      // 路由
+	Component   string        `json:"component"` // 前端组件
+	Type        int           `json:"type"`      // 1目录2菜单3按钮
+	Perms       string        `json:"perms"`     // 权限标识 sys:user:list
+	Icon        string        `json:"icon"`
+	Sort        int           `json:"sort"`
+	Status      int           `json:"status"`      // 状态
+	Description string        `json:"description"` // 描述
+	Childen     []*MenuResult `json:"childen"`
 }
