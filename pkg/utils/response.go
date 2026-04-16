@@ -7,12 +7,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Response 统一响应结构体
-type Response struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Data interface{} `json:"data,omitempty"`
-	Err  interface{} `json:"err,omitempty"`
+// SuccessResponse 成功响应结构体
+type SuccessResponse struct {
+	Code int         `json:"code" example:"200"`
+	Msg  string      `json:"msg" example:"操作成功"`
+	Data interface{} `json:"data,omitempty" swaggertype:"object"`
+}
+
+type ErrResponse struct {
+	Code int         `json:"code" example:"400"`
+	Msg  string      `json:"msg" example:"失败"`
+	Err  interface{} `json:"err,omitempty" swaggertype:"object"`
 }
 
 // Success 成功响应
@@ -31,7 +36,7 @@ func Success(c *gin.Context, args ...interface{}) {
 		data = args[0]
 	}
 
-	c.JSON(http.StatusOK, Response{
+	c.JSON(http.StatusOK, SuccessResponse{
 		Code: constant.CodeSuccess,
 		Msg:  msg,
 		Data: data,
@@ -40,15 +45,23 @@ func Success(c *gin.Context, args ...interface{}) {
 
 // Fail 业务失败响应
 func Fail(c *gin.Context, msg string) {
-	c.JSON(http.StatusOK, Response{
+	c.JSON(http.StatusOK, ErrResponse{
 		Code: constant.CodeFail,
 		Msg:  msg,
 	})
 }
 
+// NoPermission 无接口权限
+func NoPermission(c *gin.Context) {
+	c.JSON(http.StatusOK, ErrResponse{
+		Code: constant.CodeForbid,
+		Msg:  "无权限访问！",
+	})
+}
+
 // Error 系统错误响应
 func Error(c *gin.Context, msg string, err error) {
-	c.JSON(http.StatusInternalServerError, Response{
+	c.JSON(http.StatusInternalServerError, ErrResponse{
 		Code: constant.CodeError,
 		Msg:  msg,
 		Err:  err,
@@ -57,7 +70,7 @@ func Error(c *gin.Context, msg string, err error) {
 
 // Unauth 未登录响应
 func Unauth(c *gin.Context, msg string) {
-	c.JSON(http.StatusUnauthorized, Response{
+	c.JSON(http.StatusUnauthorized, ErrResponse{
 		Code: constant.CodeUnauth,
 		Msg:  msg,
 	})

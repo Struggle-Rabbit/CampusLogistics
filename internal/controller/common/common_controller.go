@@ -17,7 +17,16 @@ func NewCommonController(srv *service.ServiceProvider) *CommonController {
 	}
 }
 
-// Login 登录
+// Login 用户登录
+// @Summary 用户登录接口
+// @Description 登录系统
+// @Tags 用户管理
+// @Accept json
+// @Produce json
+// @Param data body dto.LoginReq true "入参"
+// @Success 200 {object} utils.SuccessResponse
+// @Failure 400 {object} utils.ErrResponse
+// @Router /api/v1/login [post]
 func (uCtl *CommonController) Login(c *gin.Context) {
 	var req dto.LoginReq
 
@@ -34,7 +43,16 @@ func (uCtl *CommonController) Login(c *gin.Context) {
 	}
 }
 
-// Register 注册
+// Register 用户注册
+// @Summary 用户注册接口
+// @Description 注册新用户
+// @Tags 用户管理
+// @Accept json
+// @Produce json
+// @Param data body dto.RegisterReq true "注册参数"
+// @Success 200 {object} utils.SuccessResponse
+// @Failure 400 {object} utils.ErrResponse
+// @Router /api/v1/register [post]
 func (uCtl *CommonController) Register(c *gin.Context) {
 	var req dto.RegisterReq
 

@@ -12,17 +12,19 @@ import (
 
 // CustomClaims 自定义 JWT 声明
 type CustomClaims struct {
-	UserID string `json:"user_id"`
+	UserID   string `json:"user_id"`
+	UserName string `json:"user_name"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken 生成 Access Token 和 Refresh Token
-func GenerateToken(userID string) (accessToken, refreshToken string, err error) {
+func GenerateToken(userID string, userName string) (accessToken, refreshToken string, err error) {
 	cfg := config.GlobalConfig.JWT
 
 	// Access Token
 	accessClaims := CustomClaims{
-		UserID: userID,
+		UserID:   userID,
+		UserName: userName,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(cfg.AccessExpire) * time.Second)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -36,7 +38,8 @@ func GenerateToken(userID string) (accessToken, refreshToken string, err error) 
 
 	// Refresh Token
 	refreshClaims := CustomClaims{
-		UserID: userID,
+		UserID:   userID,
+		UserName: userName,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(cfg.RefreshExpire) * time.Second)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

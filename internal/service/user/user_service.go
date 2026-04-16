@@ -72,17 +72,17 @@ func (s *UserService) Login(req *dto.LoginReq) (*dto.LoginResult, error) {
 	if err == nil {
 		// 密码校验
 		if err := utils.VerifyPasswordFunc(sysUser.Password, req.Password); err != nil {
-			return nil, errors.New("密码不正确")
+			return nil, errors.New("账号密码不正确")
 		}
 	} else {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
 		} else {
-			return nil, errors.New("账号输入不正确")
+			return nil, errors.New("账号密码不正确")
 		}
 	}
 
-	accessToken, refreshToken, err := utils.GenerateToken(sysUser.ID)
+	accessToken, refreshToken, err := utils.GenerateToken(sysUser.ID, sysUser.Name)
 
 	if err != nil {
 		return nil, err
@@ -128,5 +128,56 @@ func (s *UserService) GetListByPage(req *dto.UserListPageReq) (*dto.PageResult, 
 		Total:       total,
 		PageSize:    req.PageSize,
 		CurrentPage: req.CurrentPage,
+	}, nil
+}
+
+func (s *UserService) UpdateUser(req *dto.UserUpdateReq) error {
+	var user model.SysUser
+	if err := mapstructure.Decode(req, &user); err != nil {
+		return err
+	}
+	return s.app.DB.Save(&user).Error
+}
+
+func (s *UserService) DelUser(id string) error {
+
+	return s.app.DB.Delete(&model.SysUser{}, id).Error
+}
+
+func (s *UserService) GetUserPermission(user_id string) (*dto.UserPermissionResult, error) {
+	// 根据userID获取对应的角色ID
+	var roleIDs []string
+	if err := s.app.DB.Model(&model.SysUserRole{}).Where("user_id = ?", user_id).Pluck("role_id", &roleIDs).Error; err != nil {
+		return nil, err
+	}
+	// 根据角色ID获取角色详情
+	var userRole []dto.RoleResult
+	if err := s.app.DB.Model(&model.SysRole{}).Where("idIN ?", roleIDs).Find(&userRole).Error; err != nil {
+		return nil, err
+	}
+
+	// 根据角色ID查菜单ID（去重）
+	var menuIDs []string
+	if err := s.app.DB.Model(&model.SysRoleMenu{}).
+		Where("role_id IN ?", roleIDs).
+		Distinct(). // 去重：多个角色可能有相同菜单
+		Pluck("menu_id", &menuIDs).Error; err != nil {
+		return nil, err
+	}
+
+	// 根据菜单ID查菜单详情
+	var menus []dto.MenuResult
+	if len(menuIDs) > 0 {
+		if err := s.app.DB.Model(&model.SysMenu{}).Where("id IN ?", menuIDs).Find(&menus).Error; err != nil {
+			return nil, err
+		}
+	}
+
+	return &dto.UserPermissionResult{
+		UserId:  user_id,
+		RoleIDs: roleIDs,
+		Roles:   userRole,
+		MenuIDs: menuIDs,
+		Menus:   menus,
 	}, nil
 }

@@ -1,0 +1,755 @@
+basePath: /api/v1
+definitions:
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.CreateMenuReq:
+    properties:
+      component:
+        description: 前端组件
+        type: string
+      description:
+        description: 描述
+        type: string
+      icon:
+        type: string
+      name:
+        description: 菜单名称
+        type: string
+      parent_id:
+        type: string
+      path:
+        description: 路由
+        type: string
+      perms:
+        description: 权限标识 sys:user:list
+        type: string
+      sort:
+        type: integer
+      status:
+        description: 状态
+        type: integer
+      type:
+        description: 1目录2菜单3按钮
+        type: integer
+    required:
+    - name
+    - perms
+    - status
+    - type
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.CreateRoleReq:
+    properties:
+      description:
+        type: string
+      is_built_in:
+        type: integer
+      role_code:
+        type: string
+      role_name:
+        type: string
+      status:
+        type: string
+    required:
+    - role_code
+    - role_name
+    - status
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.LoginReq:
+    properties:
+      account:
+        example: "13811111111"
+        type: string
+      password:
+        example: "12345678"
+        type: string
+    required:
+    - account
+    - password
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.RegisterReq:
+    properties:
+      mobile:
+        example: "13811111111"
+        type: string
+      name:
+        example: 张三
+        type: string
+      password:
+        example: "12345678"
+        maxLength: 20
+        minLength: 8
+        type: string
+      userType:
+        enum:
+        - "00"
+        - "01"
+        - "02"
+        example: "02"
+        type: string
+    required:
+    - mobile
+    - name
+    - password
+    - userType
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.UpdateMenuReq:
+    properties:
+      component:
+        description: 前端组件
+        type: string
+      description:
+        description: 描述
+        type: string
+      icon:
+        type: string
+      id:
+        type: string
+      name:
+        description: 菜单名称
+        type: string
+      parent_id:
+        type: string
+      path:
+        description: 路由
+        type: string
+      perms:
+        description: 权限标识 sys:user:list
+        type: string
+      sort:
+        type: integer
+      status:
+        description: 状态
+        type: integer
+      type:
+        description: 1目录2菜单3按钮
+        type: integer
+    required:
+    - id
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.UpdateRoleReq:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      is_built_in:
+        type: integer
+      role_code:
+        type: string
+      role_name:
+        type: string
+      status:
+        type: string
+    required:
+    - id
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.UserUpdateReq:
+    properties:
+      avatar:
+        description: 头像URL
+        type: string
+      id:
+        type: string
+      mobile:
+        description: 手机号（唯一）
+        type: string
+      name:
+        description: 姓名
+        type: string
+      status:
+        description: 状态：1-启用 2-禁用
+        type: integer
+      user_code:
+        description: 学号/工号（唯一）
+        type: string
+      user_type:
+        description: '用户类型: 00-管理员  01-职工  02-学生'
+        type: string
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse:
+    properties:
+      code:
+        example: 400
+        type: integer
+      err:
+        type: object
+      msg:
+        example: 失败
+        type: string
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      data:
+        type: object
+      msg:
+        example: 操作成功
+        type: string
+    type: object
+host: localhost:8880
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server for user management.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Swagger Example API
+  version: "1.0"
+paths:
+  /api/v1/OperationLogList:
+    get:
+      consumes:
+      - application/json
+      description: 操作日志分页查询
+      parameters:
+      - description: 当前页
+        in: query
+        name: currentPage
+        type: integer
+      - in: query
+        name: ip
+        type: string
+      - in: query
+        name: operation_at
+        type: string
+      - description: 每页条数
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: user_id
+        type: string
+      - in: query
+        name: user_name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 操作日志分页查询接口
+      tags:
+      - 系统模块
+  /api/v1/login:
+    post:
+      consumes:
+      - application/json
+      description: 登录系统
+      parameters:
+      - description: 入参
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.LoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 用户登录接口
+      tags:
+      - 用户管理
+  /api/v1/menu/add:
+    post:
+      consumes:
+      - application/json
+      description: 菜单创建
+      parameters:
+      - description: 入参
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.CreateMenuReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 菜单创建接口
+      tags:
+      - 系统模块
+  /api/v1/menu/del:
+    post:
+      consumes:
+      - application/json
+      description: 菜单删除
+      parameters:
+      - description: 入参
+        in: query
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 菜单删除接口
+      tags:
+      - 系统模块
+  /api/v1/menu/detail:
+    get:
+      consumes:
+      - application/json
+      description: 菜单详情查询
+      parameters:
+      - description: 入参
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 菜单详情接口
+      tags:
+      - 系统模块
+  /api/v1/menu/listPage:
+    get:
+      consumes:
+      - application/json
+      description: 菜单查询
+      parameters:
+      - description: 当前页
+        in: query
+        name: currentPage
+        type: integer
+      - description: 菜单名称
+        in: query
+        name: name
+        type: string
+      - description: 每页条数
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: parent_id
+        type: string
+      - description: 权限标识 sys:user:list
+        in: query
+        name: perms
+        type: string
+      - description: 状态
+        in: query
+        name: status
+        type: integer
+      - description: 1目录2菜单3按钮
+        in: query
+        name: type
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 菜单查询接口
+      tags:
+      - 系统模块
+  /api/v1/menu/update:
+    post:
+      consumes:
+      - application/json
+      description: 菜单更新
+      parameters:
+      - description: 入参
+        in: body
+        name: data
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UpdateMenuReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 菜单更新接口
+      tags:
+      - 系统模块
+  /api/v1/register:
+    post:
+      consumes:
+      - application/json
+      description: 注册新用户
+      parameters:
+      - description: 注册参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.RegisterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 用户注册接口
+      tags:
+      - 用户管理
+  /api/v1/role/add:
+    post:
+      consumes:
+      - application/json
+      description: 角色创建
+      parameters:
+      - description: 入参
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.CreateRoleReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 角色创建接口
+      tags:
+      - 系统模块
+  /api/v1/role/del:
+    post:
+      consumes:
+      - application/json
+      description: 角色删除
+      parameters:
+      - description: 入参
+        in: body
+        name: data
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 角色删除接口
+      tags:
+      - 系统模块
+  /api/v1/role/detail:
+    get:
+      consumes:
+      - application/json
+      description: 角色详情查询
+      parameters:
+      - description: 入参
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 角色详情查询接口
+      tags:
+      - 系统模块
+  /api/v1/role/list:
+    get:
+      consumes:
+      - application/json
+      description: 角色列表查询
+      parameters:
+      - description: 当前页
+        in: query
+        name: currentPage
+        type: integer
+      - description: 每页条数
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: role_name
+        type: string
+      - in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 角色列表查询接口
+      tags:
+      - 系统模块
+  /api/v1/role/listPage:
+    get:
+      consumes:
+      - application/json
+      description: 角色分页查询
+      parameters:
+      - description: 当前页
+        in: query
+        name: currentPage
+        type: integer
+      - description: 每页条数
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: role_name
+        type: string
+      - in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 角色分页查询接口
+      tags:
+      - 系统模块
+  /api/v1/role/update:
+    post:
+      consumes:
+      - application/json
+      description: 角色修改
+      parameters:
+      - description: 入参
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UpdateRoleReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 角色修改接口
+      tags:
+      - 系统模块
+  /api/v1/user/del:
+    post:
+      consumes:
+      - application/json
+      description: 删除用户
+      parameters:
+      - description: 入参
+        in: body
+        name: id
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 用户删除接口
+      tags:
+      - 用户管理
+  /api/v1/user/detail:
+    get:
+      consumes:
+      - application/json
+      description: 用户详情查询
+      parameters:
+      - description: 入参
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 用户详情查询接口
+      tags:
+      - 用户管理
+  /api/v1/user/getUserPermission:
+    get:
+      consumes:
+      - application/json
+      description: 用户菜单权限查询
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 用户菜单权限查询接口
+      tags:
+      - 用户管理
+  /api/v1/user/listPage:
+    get:
+      consumes:
+      - application/json
+      description: 用户分页查询
+      parameters:
+      - description: 当前页
+        in: query
+        name: currentPage
+        type: integer
+      - in: query
+        name: mobile
+        type: string
+      - in: query
+        name: name
+        type: string
+      - description: 每页条数
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: status
+        type: string
+      - in: query
+        name: userType
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 用户分页查询接口
+      tags:
+      - 用户管理
+    post:
+      consumes:
+      - application/json
+      description: 用户信息更新
+      parameters:
+      - description: 入参
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UserUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 用户更新接口
+      tags:
+      - 用户管理
+securityDefinitions:
+  ApiKeyAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -1,4 +1,5 @@
 app:
+  host: "127.0.0.1"
   port: 8880
   env: "dev" # 环境（dev/test/prod）
 redis:
