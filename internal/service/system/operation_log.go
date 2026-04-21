@@ -1,4 +1,4 @@
-package systeam
+package system
 
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
@@ -7,7 +7,7 @@ import (
 	"github.com/go-viper/mapstructure/v2"
 )
 
-func (s *SysteamService) GetOperationLogListByPage(req *dto.OperationLogByPageReq) (*dto.PageResult, error) {
+func (s *SystemService) GetOperationLogListByPage(req *dto.OperationLogByPageReq) (*dto.PageResult, error) {
 	var operationLogReq model.SysOperationLog
 	var total int64
 	if err := s.app.DB.Model(&model.SysOperationLog{}).Count(&total).Error; err != nil {
@@ -18,7 +18,7 @@ func (s *SysteamService) GetOperationLogListByPage(req *dto.OperationLogByPageRe
 	}
 	var list []*dto.OperationLogResult
 
-	if err := s.app.DB.Model(&model.SysRole{}).Where(&operationLogReq).Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Find(&list).Error; err != nil {
+	if err := s.app.DB.Model(&model.SysOperationLog{}).Where(&operationLogReq).Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Find(&list).Error; err != nil {
 		return nil, err
 	}
 

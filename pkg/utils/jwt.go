@@ -38,8 +38,7 @@ func GenerateToken(userID string, userName string) (accessToken, refreshToken st
 
 	// Refresh Token
 	refreshClaims := CustomClaims{
-		UserID:   userID,
-		UserName: userName,
+		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(cfg.RefreshExpire) * time.Second)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
