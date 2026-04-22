@@ -117,11 +117,9 @@ func (s *RepairService) GetDetailById(id string) (*dto.RepairOrderResult, error)
 		return nil, err
 	}
 	return &dto.RepairOrderResult{
-		BaseModel: model.BaseModel{
-			ID:        repairOrder.ID,
-			CreatedAt: repairOrder.CreatedAt,
-			UpdatedAt: repairOrder.UpdatedAt,
-		},
+		ID:          repairOrder.ID,
+		CreatedAt:   repairOrder.CreatedAt,
+		UpdatedAt:   repairOrder.UpdatedAt,
 		OrderNo:     repairOrder.OrderNo,
 		UserID:      repairOrder.UserID,
 		RepairType:  repairOrder.RepairType,
@@ -142,9 +140,9 @@ func (s *RepairService) DelRepairOrderById(id string) error {
 	return nil
 }
 
-func (s *RepairService) UpdateRepairOrder() error {
-	if err := s.app.DB.Delete(&model.RepairOrder{}, id).Error; err != nil {
-		return err
-	}
-	return nil
-}
+// func (s *RepairService) UpdateRepairOrder() error {
+// 	if err := s.app.DB.Delete(&model.RepairOrder{}, id).Error; err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
