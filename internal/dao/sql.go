@@ -60,9 +60,7 @@ func InitDB() error {
 		if err := db.AutoMigrate(
 			&model.SysUser{},
 			&model.SysRole{},
-			&model.SysUserRole{},
 			&model.SysMenu{},
-			&model.SysRoleMenu{},
 			&model.SysOperationLog{},
 			&model.RepairOrder{},
 			&model.CampusBuilding{},

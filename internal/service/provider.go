@@ -16,10 +16,15 @@ type ServiceProvider struct {
 }
 
 func NewServiceProvider(app *app.App) *ServiceProvider {
+	menuSvc := menu.NewMenuService(app)
+	roleSvc := role.NewRoleService(app)
+	userSvc := user.NewUserService(app, menuSvc)
+	systemSvc := system.NewSystemService(app)
+
 	return &ServiceProvider{
-		UserService:    user.NewUserService(app),
-		MenuService:    menu.NewMenuService(app),
-		RoleService:    role.NewRoleService(app),
-		SysteamService: system.NewSystemService(app),
+		UserService:    userSvc,
+		MenuService:    menuSvc,
+		RoleService:    roleSvc,
+		SysteamService: systemSvc,
 	}
 }

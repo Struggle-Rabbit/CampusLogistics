@@ -87,11 +87,7 @@ func (s *RepairService) GetListByPage(req *dto.RepairOrderListByPageReq) (*dto.P
 
 	for _, v := range repairRes {
 		dtoList = append(dtoList, &dto.RepairOrderResult{
-			BaseModel: model.BaseModel{
-				ID:        v.ID,
-				CreatedAt: v.CreatedAt,
-				UpdatedAt: v.UpdatedAt,
-			},
+			ID:          v.ID,
 			OrderNo:     v.OrderNo,
 			UserID:      v.UserID,
 			RepairType:  v.RepairType,
@@ -102,6 +98,8 @@ func (s *RepairService) GetListByPage(req *dto.RepairOrderListByPageReq) (*dto.P
 			Phone:       v.Phone,
 			Status:      v.Status,
 			HandlerID:   v.HandlerID,
+			CreatedAt:   v.CreatedAt,
+			UpdatedAt:   v.UpdatedAt,
 		})
 	}
 

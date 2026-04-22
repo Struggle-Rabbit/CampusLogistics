@@ -1,5 +1,7 @@
 package dto
 
+import "time"
+
 // UserListPage 分页列表请求参数
 type UserListPageReq struct {
 	UserListReq
@@ -36,14 +38,17 @@ type LoginResult struct {
 
 // UserInfo 用户信息响应
 type UserInfoResult struct {
-	ID       string   `json:"id"`
-	UserCode string   `json:"user_code"`
-	Name     string   `json:"name"`
-	Mobile   string   `json:"mobile"`
-	RoleIDs  []string `json:"role_ids"`
-	Status   int      `json:"status"`
-	Avatar   string   `json:"avatar"`
-	UserType string   `json:"user_type"`
+	ID        string        `json:"id"`
+	UserCode  string        `json:"user_code"`
+	Name      string        `json:"name"`
+	Mobile    string        `json:"mobile"`
+	RoleIDs   []string      `json:"role_ids"`
+	Status    int           `json:"status"`
+	Avatar    string        `json:"avatar"`
+	UserType  string        `json:"user_type"`
+	CreatedAt time.Time     `json:"created_at"`
+	UpdatedAt time.Time     `json:"updated_at"`
+	Roles     []*RoleResult `json:"roles"`
 }
 
 type UserUpdateReq struct {

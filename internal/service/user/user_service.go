@@ -9,6 +9,7 @@ import (
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/menu"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-viper/mapstructure/v2"
@@ -17,13 +18,15 @@ import (
 
 // UserService 用户服务
 type UserService struct {
-	app *app.App
+	app  *app.App
+	menu *menu.MenuService
 }
 
 // NewUserService 创建用户服务实例
-func NewUserService(app *app.App) *UserService {
+func NewUserService(app *app.App, menuSvc *menu.MenuService) *UserService {
 	return &UserService{
-		app: app,
+		app:  app,
+		menu: menuSvc,
 	}
 }
 
@@ -32,8 +35,9 @@ func (s *UserService) Register(req *dto.RegisterReq) error {
 	// 检查是否已存在
 	var existUser model.SysUser
 	var total int64
-	s.app.DB.Count(&total)
-	err := s.app.DB.Where("mobile = ?", req.Mobile).First(&existUser).Error
+	db := s.app.DB.Model(&model.SysUser{})
+	db.Count(&total)
+	err := db.Where("mobile = ?", req.Mobile).First(&existUser).Error
 	if err == nil {
 		return errors.New("手机号已注册")
 	}
@@ -46,24 +50,15 @@ func (s *UserService) Register(req *dto.RegisterReq) error {
 		return err
 	}
 
-	var user model.SysUser
-	if err := mapstructure.Decode(req, &user); err != nil {
-		return err
-	}
 	// 生成根据时间的自增工号
-	user.Status = 1
-	user.UserCode = fmt.Sprintf("%s00%d", time.Now().Format("20060102"), total+1)
-	user.Password = hashedPassword
-
-	// 创建用户（默认分配普通用户角色）
-	// user := &model.SysUser{
-	// 	UserCode: userCode,
-	// 	Name:     req.Name,
-	// 	Mobile:   req.Mobile,
-	// 	Password: hashedPassword,
-	// 	Status:   1, // 1-启用
-	// }
-	return s.app.DB.Create(user).Error
+	return s.app.DB.Create(&model.SysUser{
+		Name:     req.Name,
+		Mobile:   req.Mobile,
+		Password: hashedPassword,
+		UserCode: fmt.Sprintf("%s00%d", time.Now().Format("20060102"), total+1),
+		Status:   1,
+		UserType: req.UserType,
+	}).Error
 }
 
 func (s *UserService) Login(req *dto.LoginReq) (*dto.LoginResult, error) {
@@ -113,18 +108,63 @@ func (s *UserService) GetUserInfo(c *gin.Context) (*dto.UserInfoResult, error) {
 }
 
 func (s *UserService) GetListByPage(req *dto.UserListPageReq) (*dto.PageResult, error) {
-	var list []model.SysUser
+	var list []*model.SysUser
 	var total int64
-	if err := s.app.DB.Model(&model.SysUser{}).Count(&total).Error; err != nil {
+	db := s.app.DB.Model(&model.SysUser{})
+
+	if req.Mobile != "" {
+		db.Where("mobile = ?", req.Mobile)
+	}
+
+	if req.Name != "" {
+		db.Where("name = ?", req.Name)
+	}
+
+	if req.UserType != "" {
+		db.Where("user_type = ?", req.UserType)
+	}
+
+	if req.Status != "" {
+		db.Where("status = ?", req.Status)
+	}
+
+	if err := db.Count(&total).Error; err != nil {
 		return nil, err
 	}
 
-	if err := s.app.DB.Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Find(&list).Error; err != nil {
+	if err := db.Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Preload("Roles").Find(&list).Error; err != nil {
 		return nil, err
+	}
+
+	var dtoList []*dto.UserInfoResult
+
+	for _, v := range list {
+		var roleResults []*dto.RoleResult
+		for _, r := range v.Roles {
+			roleResults = append(roleResults, &dto.RoleResult{
+				ID:       r.ID,
+				RoleName: r.RoleName,
+				RoleCode: r.RoleCode,
+				Status:   r.Status,
+			})
+		}
+
+		dtoList = append(dtoList, &dto.UserInfoResult{
+			ID:        v.ID,
+			Name:      v.Name,
+			UserCode:  v.UserCode,
+			UserType:  v.UserType,
+			Avatar:    v.Avatar,
+			Mobile:    v.Mobile,
+			Status:    v.Status,
+			Roles:     roleResults,
+			CreatedAt: v.CreatedAt,
+			UpdatedAt: v.UpdatedAt,
+		})
 	}
 
 	return &dto.PageResult{
-		List:        list,
+		List:        dtoList,
 		Total:       total,
 		PageSize:    req.PageSize,
 		CurrentPage: req.CurrentPage,
@@ -145,39 +185,52 @@ func (s *UserService) DelUser(id string) error {
 }
 
 func (s *UserService) GetUserPermission(user_id string) (*dto.UserPermissionResult, error) {
-	// 根据userID获取对应的角色ID
-	var roleIDs []string
-	if err := s.app.DB.Model(&model.SysUserRole{}).Where("user_id = ?", user_id).Pluck("role_id", &roleIDs).Error; err != nil {
-		return nil, err
-	}
-	// 根据角色ID获取角色详情
-	var userRole []dto.RoleResult
-	if err := s.app.DB.Model(&model.SysRole{}).Where("idIN ?", roleIDs).Find(&userRole).Error; err != nil {
-		return nil, err
-	}
-
-	// 根据角色ID查菜单ID（去重）
-	var menuIDs []string
-	if err := s.app.DB.Model(&model.SysRoleMenu{}).
-		Where("role_id IN ?", roleIDs).
-		Distinct(). // 去重：多个角色可能有相同菜单
-		Pluck("menu_id", &menuIDs).Error; err != nil {
+	var sysUser model.SysUser
+	err := s.app.DB.Preload("Roles").Preload("Roles.Menus").First(&sysUser, "id = ?", user_id).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("用户不存在")
+		}
 		return nil, err
 	}
 
-	// 根据菜单ID查菜单详情
-	var menus []dto.MenuResult
-	if len(menuIDs) > 0 {
-		if err := s.app.DB.Model(&model.SysMenu{}).Where("id IN ?", menuIDs).Find(&menus).Error; err != nil {
-			return nil, err
+	var roleRes []dto.RoleResult
+	var menuList []model.SysMenu
+
+	var roleIds []string
+	var menuIds []string
+	menuMap := make(map[string]model.SysMenu)
+	for _, role := range sysUser.Roles {
+		roleIds = append(roleIds, role.ID)
+
+		roleRes = append(roleRes, dto.RoleResult{
+			ID:          role.ID,
+			RoleName:    role.RoleName,
+			RoleCode:    role.RoleCode,
+			Status:      role.Status,
+			IsBuiltIn:   role.IsBuiltIn,
+			Description: role.Description,
+			CreatedAt:   role.CreatedAt,
+			UpdatedAt:   role.UpdatedAt,
+		})
+
+		for _, menu := range role.Menus {
+			if _, exists := menuMap[menu.ID]; !exists {
+				menuMap[menu.ID] = menu
+			}
 		}
 	}
 
+	for _, menu := range menuMap {
+		menuIds = append(menuIds, menu.ID)
+		menuList = append(menuList, menu)
+	}
+
 	return &dto.UserPermissionResult{
-		UserId:  user_id,
-		RoleIDs: roleIDs,
-		Roles:   userRole,
-		MenuIDs: menuIDs,
-		Menus:   menus,
+		UserId:  sysUser.ID,
+		RoleIDs: roleIds,
+		Roles:   roleRes,
+		MenuIDs: menuIds,
+		Menus:   s.menu.BuildMenuTree(menuList),
 	}, nil
 }

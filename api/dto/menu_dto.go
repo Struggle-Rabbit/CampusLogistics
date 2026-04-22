@@ -1,5 +1,7 @@
 package dto
 
+import "time"
+
 type CreateMenuReq struct {
 	ParentID    string `json:"parent_id"`
 	Name        string `json:"name" binding:"required"`  // 菜单名称
@@ -52,5 +54,7 @@ type MenuResult struct {
 	Sort        int           `json:"sort"`
 	Status      int           `json:"status"`      // 状态
 	Description string        `json:"description"` // 描述
-	Childen     []*MenuResult `json:"childen"`
+	CreatedAt   time.Time     `json:"created_at"`
+	UpdatedAt   time.Time     `json:"updated_at"`
+	Children    []*MenuResult `json:"childen"`
 }
