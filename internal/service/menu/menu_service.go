@@ -1,11 +1,12 @@
 package menu
 
 import (
+	"errors"
+
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
-	"github.com/go-viper/mapstructure/v2"
 )
 
 type MenuService struct {
@@ -19,22 +20,57 @@ func NewMenuService(app *app.App) *MenuService {
 }
 
 func (s *MenuService) CreateMenu(req *dto.CreateMenuReq) error {
-	var menu model.SysMenu
-	if err := mapstructure.Decode(req, &menu); err != nil {
-		return err
+	menu := &model.SysMenu{
+		ParentID:    req.ParentID,
+		Name:        req.Name,
+		Type:        req.Type,
+		Perms:       req.Perms,
+		Status:      req.Status,
+		Sort:        req.Sort,
+		Icon:        req.Icon,
+		Description: req.Description,
 	}
-	return s.app.DB.Create(&menu).Error
+
+	if req.Type == 3 {
+		if req.Path == "" {
+			return errors.New("路由地址不能为空！")
+		}
+		if req.Component == "" {
+			return errors.New("组件地址不能为空")
+		}
+		menu.Path = req.Path
+		menu.Component = req.Component
+	}
+
+	return s.app.DB.Create(menu).Error
 }
 
 func (s *MenuService) UpdateMenu(req *dto.UpdateMenuReq) error {
-	var menu model.SysMenu
-	if err := mapstructure.Decode(req, &menu); err != nil {
-		return err
+	menu := &model.SysMenu{
+		ParentID:    req.ParentID,
+		Name:        req.Name,
+		Type:        req.Type,
+		Perms:       req.Perms,
+		Status:      req.Status,
+		Sort:        req.Sort,
+		Icon:        req.Icon,
+		Description: req.Description,
 	}
-	return s.app.DB.Save(&menu).Error
+
+	if req.Type == 3 {
+		if req.Path == "" {
+			return errors.New("路由地址不能为空！")
+		}
+		if req.Component == "" {
+			return errors.New("组件地址不能为空")
+		}
+		menu.Path = req.Path
+		menu.Component = req.Component
+	}
+	return s.app.DB.Where("id = ?", req.ID).Updates(&menu).Error
 }
 
-func (s *MenuService) DelMenu(id string) error {
+func (s *MenuService) DelMenu(id []string) error {
 
 	return s.app.DB.Delete(&model.SysMenu{}, id).Error
 }
@@ -43,19 +79,19 @@ func (s *MenuService) GetMenuList(req *dto.MenuListReq) ([]dto.MenuResult, error
 	var menuSqlRes []model.SysMenu
 	db := s.app.DB.Model(&model.SysMenu{})
 	if req.Name != "" {
-		db.Where("name = ?", req.Name)
+		db.Where("name LIKE ?", "%"+req.Name+"%")
 	}
-	if req.Type != 0 {
+	if req.Type != nil {
 		db.Where("type = ?", req.Type)
 	}
-	if req.Status != 0 {
+	if req.Status != nil {
 		db.Where("status = ?", req.Status)
 	}
 	if req.ParentID != "" {
 		db.Where("parent_id = ?", req.ParentID)
 	}
 	if req.Perms != "" {
-		db.Where("perms = ?", req.Perms)
+		db.Where("perms LIKE ?", "%"+req.Perms+"%")
 	}
 
 	db.Find(&menuSqlRes)
@@ -65,17 +101,29 @@ func (s *MenuService) GetMenuList(req *dto.MenuListReq) ([]dto.MenuResult, error
 }
 
 func (s *MenuService) GetMenuListByPage(req *dto.MenuListByPageReq) (*dto.PageResult, error) {
-	var menuReq model.SysMenu
 	var total int64
-	if err := s.app.DB.Model(&model.SysMenu{}).Where("parent_id = ?", "0").Count(&total).Error; err != nil {
+	db := s.app.DB.Model(&model.SysMenu{})
+	if err := db.Where("parent_id = ?", "0").Count(&total).Error; err != nil {
 		return nil, err
 	}
-	if err := mapstructure.Decode(req, &menuReq); err != nil {
-		return nil, err
+	if req.ParentID != "" {
+		db.Where("parent_id = ?", req.ParentID)
+	}
+	if req.Name != "" {
+		db.Where("name LIKE ?", "%"+req.Name+"%")
+	}
+	if req.Type != nil {
+		db.Where("type = ?", req.Type)
+	}
+	if req.Status != nil {
+		db.Where("status = ?", req.Status)
+	}
+	if req.Perms != "" {
+		db.Where("perms = ?", req.Perms)
 	}
 	var list []model.SysMenu
 
-	if err := s.app.DB.Model(&model.SysMenu{}).Where(&menuReq).Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Find(&list).Error; err != nil {
+	if err := db.Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Find(&list).Error; err != nil {
 		return nil, err
 	}
 
@@ -92,7 +140,7 @@ func (s *MenuService) GetMenuListByPage(req *dto.MenuListByPageReq) (*dto.PageRe
 func (s *MenuService) MenuDetailById(id string) (*dto.MenuResult, error) {
 	var menuResult dto.MenuResult
 
-	if err := s.app.DB.Model(&model.SysMenu{}).Where("id = ?", id).First(&menuResult).Error; err != nil {
+	if err := s.app.DB.Model(&model.SysMenu{}).Where("id = ?", id).Scan(&menuResult).Error; err != nil {
 		return nil, err
 	}
 

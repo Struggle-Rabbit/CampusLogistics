@@ -55,8 +55,8 @@ func (mc *MenuController) DelMenu(c *gin.Context) {
 		return
 	}
 
-	id, ok := data["id"].(string)
-	if !ok || id == "" {
+	id, ok := data["ids"].([]string)
+	if !ok || len(id) == 0 {
 		utils.Fail(c, "请选择要删除的数据")
 		return
 	}

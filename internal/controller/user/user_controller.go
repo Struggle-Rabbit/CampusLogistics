@@ -35,8 +35,8 @@ func (s *UserController) DelUser(c *gin.Context) {
 		return
 	}
 
-	id, ok := data["id"].(string)
-	if !ok || id == "" {
+	id, ok := data["id"].([]string)
+	if !ok || len(id) == 0 {
 		utils.Fail(c, "请选择要删除的数据")
 		return
 	}

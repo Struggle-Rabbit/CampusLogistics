@@ -12,7 +12,6 @@ import (
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/menu"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/go-viper/mapstructure/v2"
 	"gorm.io/gorm"
 )
 
@@ -172,14 +171,29 @@ func (s *UserService) GetListByPage(req *dto.UserListPageReq) (*dto.PageResult, 
 }
 
 func (s *UserService) UpdateUser(req *dto.UserUpdateReq) error {
-	var user model.SysUser
-	if err := mapstructure.Decode(req, &user); err != nil {
-		return err
+	if req.ID == "" {
+		return errors.New("id不能为空")
 	}
-	return s.app.DB.Save(&user).Error
+	if req.Mobile != "" {
+		var user model.SysUser
+		if err := s.app.DB.Where("mobile = ? AND id != ?", req.Mobile, req.ID).First(&user).Error; err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
+		} else {
+			return errors.New("此手机号已被使用")
+		}
+	}
+	return s.app.DB.Model(&model.SysUser{}).Where("id = ?", req.ID).Updates(model.SysUser{
+		Name:     req.Name,
+		Mobile:   req.Mobile,
+		Status:   req.Status,
+		Avatar:   req.Avatar,
+		UserType: req.UserType,
+	}).Error
 }
 
-func (s *UserService) DelUser(id string) error {
+func (s *UserService) DelUser(id []string) error {
 
 	return s.app.DB.Delete(&model.SysUser{}, id).Error
 }

@@ -55,8 +55,8 @@ func (s *RoleController) DelRole(c *gin.Context) {
 		return
 	}
 
-	id, ok := data["id"].(string)
-	if !ok || id == "" {
+	id, ok := data["id"].([]string)
+	if !ok || len(id) == 0 {
 		utils.Fail(c, "请选择要删除的数据")
 		return
 	}
@@ -121,10 +121,10 @@ func (s *RoleController) GetListByPage(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/role/list [get]
 func (s *RoleController) GetList(c *gin.Context) {
-	var roleReq dto.RoleListReq
-	_ = utils.ShouldBind(c, &roleReq)
 
-	res, err := s.srv.RoleService.GetRoleList(&roleReq)
+	name, _ := c.GetQuery("name")
+
+	res, err := s.srv.RoleService.GetRoleList(name)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return

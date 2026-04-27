@@ -3,7 +3,7 @@ package dto
 import "time"
 
 type CreateMenuReq struct {
-	ParentID    string `json:"parent_id"`
+	ParentID    string `json:"parent_id" binding:"required"`
 	Name        string `json:"name" binding:"required"`  // 菜单名称
 	Path        string `json:"path"`                     // 路由
 	Component   string `json:"component"`                // 前端组件
@@ -32,9 +32,9 @@ type UpdateMenuReq struct {
 type MenuListReq struct {
 	ParentID string `json:"parent_id"`
 	Name     string `json:"name"`   // 菜单名称
-	Type     int    `json:"type"`   // 1目录2菜单3按钮
+	Type     *int   `json:"type"`   // 1目录2菜单3按钮
 	Perms    string `json:"perms"`  // 权限标识 sys:user:list
-	Status   int    `json:"status"` // 状态
+	Status   *int   `json:"status"` // 状态
 }
 
 type MenuListByPageReq struct {

@@ -2,13 +2,6 @@ package dto
 
 import "time"
 
-type OperationLogReq struct {
-	UserID      string    `json:"user_id"`
-	UserName    string    `json:"user_name"`
-	IP          string    `json:"ip"`
-	OperationAt time.Time `json:"operation_at"`
-}
-
 type OperationLogResult struct {
 	ID          string    `json:"id"`
 	UserID      string    `json:"user_id"`
@@ -24,7 +17,10 @@ type OperationLogResult struct {
 
 type OperationLogByPageReq struct {
 	PageReq
-	OperationLogReq
+	UserID             string    `json:"user_id"`
+	OperationTimeStart time.Time `json:"operation_time_start"`
+	OperationTimeEnd   time.Time `json:"operation_time_end"`
+	IP                 string    `json:"ip"`
 }
 
 type RefreshTokenResult struct {

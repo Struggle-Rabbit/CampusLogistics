@@ -23,46 +23,51 @@ func (s *RoleService) CreateRole(req *dto.CreateRoleReq) error {
 	if err := mapstructure.Decode(req, &role); err != nil {
 		return err
 	}
-	return s.app.DB.Create(&role).Error
+	return s.app.DB.Create(&model.SysRole{
+		RoleName:    req.RoleName,
+		RoleCode:    req.RoleCode,
+		Status:      req.Status,
+		IsBuiltIn:   2,
+		Description: req.Description,
+	}).Error
 }
 
 func (s *RoleService) UpdateRole(req *dto.UpdateRoleReq) error {
-	var role model.SysRole
-	if err := mapstructure.Decode(req, &role); err != nil {
-		return err
-	}
-	return s.app.DB.Save(&role).Error
+	return s.app.DB.Model(&model.SysRole{}).Where("id = ?", req.ID).Updates(model.SysRole{
+		RoleName: req.RoleName,
+		RoleCode: req.RoleCode,
+		Status:   req.Status,
+	}).Error
 }
 
-func (s *RoleService) DelRole(id string) error {
+func (s *RoleService) DelRole(id []string) error {
 
 	return s.app.DB.Delete(&model.SysRole{}, id).Error
 }
 
-func (s *RoleService) GetRoleList(req *dto.RoleListReq) ([]*dto.RoleResult, error) {
-	var roleReq model.SysRole
-	if err := mapstructure.Decode(req, &roleReq); err != nil {
-		return nil, err
-	}
-	var roleSqlRes []*dto.RoleResult
+func (s *RoleService) GetRoleList(name string) ([]dto.RoleResult, error) {
+	var roleSqlRes []dto.RoleResult
 
-	s.app.DB.Where(&roleReq).Find(&roleSqlRes)
+	s.app.DB.Model(&model.SysRole{}).Where("role_name LIKE ?", "%"+name+"%").Scan(&roleSqlRes)
 
 	return roleSqlRes, nil
 }
 
 func (s *RoleService) GetRoleListByPage(req *dto.RoleListByPageReq) (*dto.PageResult, error) {
-	var roleReq model.SysRole
 	var total int64
-	if err := s.app.DB.Model(&model.SysRole{}).Count(&total).Error; err != nil {
+	db := s.app.DB.Model(&model.SysRole{})
+	if err := db.Count(&total).Error; err != nil {
 		return nil, err
 	}
-	if err := mapstructure.Decode(req, &roleReq); err != nil {
-		return nil, err
+	if req.RoleName != "" {
+		db.Where("role_name = ?", req.RoleName)
+	}
+	if req.Status != "" {
+		db.Where("status = ?", req.Status)
 	}
 	var list []*dto.RoleResult
 
-	if err := s.app.DB.Model(&model.SysRole{}).Where(&roleReq).Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Find(&list).Error; err != nil {
+	if err := db.Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Scan(&list).Error; err != nil {
 		return nil, err
 	}
 

@@ -53,7 +53,6 @@ type UserInfoResult struct {
 
 type UserUpdateReq struct {
 	ID       string `json:"id"`
-	UserCode string `json:"user_code"` // 学号/工号（唯一）
 	Name     string `json:"name"`      // 姓名
 	Mobile   string `json:"mobile"`    // 手机号（唯一）
 	Status   int    `json:"status"`    // 状态：1-启用 2-禁用
