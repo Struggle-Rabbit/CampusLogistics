@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"strings"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,4 +22,17 @@ func VerifyPasswordFunc(hashedPassword string, password string) error {
 		return err
 	}
 	return nil
+}
+
+// IsEmpty 判断是否为 nil 或空字符串
+func IsEmpty(s *string) bool {
+	return s == nil || *s == ""
+}
+
+// IsBlank 判断是否为 nil、空字符串或全空白
+func IsBlank(s *string) bool {
+	if s == nil {
+		return true
+	}
+	return strings.TrimSpace(*s) == ""
 }

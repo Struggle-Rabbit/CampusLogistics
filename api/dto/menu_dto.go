@@ -30,11 +30,11 @@ type UpdateMenuReq struct {
 }
 
 type MenuListReq struct {
-	ParentID string `json:"parent_id"`
-	Name     string `json:"name"`   // 菜单名称
-	Type     *int   `json:"type"`   // 1目录2菜单3按钮
-	Perms    string `json:"perms"`  // 权限标识 sys:user:list
-	Status   *int   `json:"status"` // 状态
+	ParentID *string `json:"parent_id"`
+	Name     *string `json:"name"`   // 菜单名称
+	Type     *int    `json:"type"`   // 1目录2菜单3按钮
+	Perms    *string `json:"perms"`  // 权限标识 sys:user:list
+	Status   *int    `json:"status"` // 状态
 }
 
 type MenuListByPageReq struct {

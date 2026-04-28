@@ -78,20 +78,20 @@ func (s *MenuService) DelMenu(id []string) error {
 func (s *MenuService) GetMenuList(req *dto.MenuListReq) ([]dto.MenuResult, error) {
 	var menuSqlRes []model.SysMenu
 	db := s.app.DB.Model(&model.SysMenu{})
-	if req.Name != "" {
-		db.Where("name LIKE ?", "%"+req.Name+"%")
+	if req.Name != nil {
+		db.Where("name LIKE ?", "%"+*req.Name+"%")
 	}
 	if req.Type != nil {
-		db.Where("type = ?", req.Type)
+		db.Where("type = ?", *req.Type)
 	}
 	if req.Status != nil {
-		db.Where("status = ?", req.Status)
+		db.Where("status = ?", *req.Status)
 	}
-	if req.ParentID != "" {
-		db.Where("parent_id = ?", req.ParentID)
+	if req.ParentID != nil {
+		db.Where("parent_id = ?", *req.ParentID)
 	}
-	if req.Perms != "" {
-		db.Where("perms LIKE ?", "%"+req.Perms+"%")
+	if req.Perms != nil {
+		db.Where("perms LIKE ?", "%"+*req.Perms+"%")
 	}
 
 	db.Find(&menuSqlRes)
@@ -106,20 +106,20 @@ func (s *MenuService) GetMenuListByPage(req *dto.MenuListByPageReq) (*dto.PageRe
 	if err := db.Where("parent_id = ?", "0").Count(&total).Error; err != nil {
 		return nil, err
 	}
-	if req.ParentID != "" {
-		db.Where("parent_id = ?", req.ParentID)
-	}
-	if req.Name != "" {
-		db.Where("name LIKE ?", "%"+req.Name+"%")
+	if req.Name != nil {
+		db.Where("name LIKE ?", "%"+*req.Name+"%")
 	}
 	if req.Type != nil {
-		db.Where("type = ?", req.Type)
+		db.Where("type = ?", *req.Type)
 	}
 	if req.Status != nil {
-		db.Where("status = ?", req.Status)
+		db.Where("status = ?", *req.Status)
 	}
-	if req.Perms != "" {
-		db.Where("perms = ?", req.Perms)
+	if req.ParentID != nil {
+		db.Where("parent_id = ?", *req.ParentID)
+	}
+	if req.Perms != nil {
+		db.Where("perms LIKE ?", "%"+*req.Perms+"%")
 	}
 	var list []model.SysMenu
 

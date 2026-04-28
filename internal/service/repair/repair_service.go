@@ -1,6 +1,7 @@
 package repair
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
+	"gorm.io/gorm"
 )
 
 type RepairService struct {
@@ -52,7 +54,7 @@ func (s *RepairService) RepairOrderSubmit(userID string, req *dto.RepairOrderSub
 
 func (s *RepairService) GetListByPage(req *dto.RepairOrderListByPageReq) (*dto.PageResult, error) {
 	var total int64
-	var repairRes []*model.RepairOrder
+	var repairRes []*dto.RepairOrderResult
 
 	db := s.app.DB.Model(&model.RepairOrder{})
 
@@ -66,7 +68,7 @@ func (s *RepairService) GetListByPage(req *dto.RepairOrderListByPageReq) (*dto.P
 	if req.Contact != "" {
 		db.Where("contact = ?", req.Contact)
 	}
-	if req.HandlerID != "" {
+	if req.HandlerID != nil {
 		db.Where("handler_id = ?", req.HandlerID)
 	}
 	if req.Phone != "" {
@@ -79,32 +81,32 @@ func (s *RepairService) GetListByPage(req *dto.RepairOrderListByPageReq) (*dto.P
 		db.Where("status = ?", req.Status)
 	}
 
-	if err := db.Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Find(&repairRes).Error; err != nil {
+	if err := db.Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Scan(&repairRes).Error; err != nil {
 		return nil, err
 	}
 
-	var dtoList []*dto.RepairOrderResult
+	// var dtoList []*dto.RepairOrderResult
 
-	for _, v := range repairRes {
-		dtoList = append(dtoList, &dto.RepairOrderResult{
-			ID:          v.ID,
-			OrderNo:     v.OrderNo,
-			UserID:      v.UserID,
-			RepairType:  v.RepairType,
-			Address:     v.Address,
-			Description: v.Description,
-			Images:      v.Images,
-			Contact:     v.Contact,
-			Phone:       v.Phone,
-			Status:      v.Status,
-			HandlerID:   v.HandlerID,
-			CreatedAt:   v.CreatedAt,
-			UpdatedAt:   v.UpdatedAt,
-		})
-	}
+	// for _, v := range repairRes {
+	// 	dtoList = append(dtoList, &dto.RepairOrderResult{
+	// 		ID:          v.ID,
+	// 		OrderNo:     v.OrderNo,
+	// 		UserID:      v.UserID,
+	// 		RepairType:  v.RepairType,
+	// 		Address:     v.Address,
+	// 		Description: v.Description,
+	// 		Images:      v.Images,
+	// 		Contact:     v.Contact,
+	// 		Phone:       v.Phone,
+	// 		Status:      v.Status,
+	// 		HandlerID:   v.HandlerID,
+	// 		CreatedAt:   v.CreatedAt,
+	// 		UpdatedAt:   v.UpdatedAt,
+	// 	})
+	// }
 
 	return &dto.PageResult{
-		List:        dtoList,
+		List:        repairRes,
 		Total:       total,
 		PageSize:    req.PageSize,
 		CurrentPage: req.CurrentPage,
@@ -112,25 +114,26 @@ func (s *RepairService) GetListByPage(req *dto.RepairOrderListByPageReq) (*dto.P
 }
 
 func (s *RepairService) GetDetailById(id string) (*dto.RepairOrderResult, error) {
-	var repairOrder model.RepairOrder
+	var repairOrder dto.RepairOrderResult
 	if err := s.app.DB.Model(&model.RepairOrder{}).Where("id = ?", id).First(&repairOrder).Error; err != nil {
 		return nil, err
 	}
-	return &dto.RepairOrderResult{
-		ID:          repairOrder.ID,
-		CreatedAt:   repairOrder.CreatedAt,
-		UpdatedAt:   repairOrder.UpdatedAt,
-		OrderNo:     repairOrder.OrderNo,
-		UserID:      repairOrder.UserID,
-		RepairType:  repairOrder.RepairType,
-		Address:     repairOrder.Address,
-		Description: repairOrder.Description,
-		Images:      repairOrder.Images,
-		Contact:     repairOrder.Contact,
-		Phone:       repairOrder.Phone,
-		Status:      repairOrder.Status,
-		HandlerID:   repairOrder.HandlerID,
-	}, nil
+	// &dto.RepairOrderResult{
+	// 	ID:          repairOrder.ID,
+	// 	CreatedAt:   repairOrder.CreatedAt,
+	// 	UpdatedAt:   repairOrder.UpdatedAt,
+	// 	OrderNo:     repairOrder.OrderNo,
+	// 	UserID:      repairOrder.UserID,
+	// 	RepairType:  repairOrder.RepairType,
+	// 	Address:     repairOrder.Address,
+	// 	Description: repairOrder.Description,
+	// 	Images:      repairOrder.Images,
+	// 	Contact:     repairOrder.Contact,
+	// 	Phone:       repairOrder.Phone,
+	// 	Status:      repairOrder.Status,
+	// 	HandlerID:   repairOrder.HandlerID,
+	// }
+	return &repairOrder, nil
 }
 
 func (s *RepairService) DelRepairOrderById(id string) error {
@@ -140,9 +143,78 @@ func (s *RepairService) DelRepairOrderById(id string) error {
 	return nil
 }
 
-// func (s *RepairService) UpdateRepairOrder() error {
-// 	if err := s.app.DB.Delete(&model.RepairOrder{}, id).Error; err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
+func (s *RepairService) UpdateRepairOrder(req dto.UpdateRepairOrderSubmitReq) error {
+	var order model.RepairOrder
+	db := s.app.DB.Model(&model.RepairOrder{}).Where("id = ?", req.ID)
+
+	if err := db.First(&order).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("未找到订单记录")
+		}
+		return err
+	}
+
+	if order.Status != 1 {
+		return errors.New("只有待分配可编辑")
+	}
+
+	return db.Where("id = ?", req.ID).Updates(&model.RepairOrder{
+		RepairType:  req.RepairType,
+		Address:     req.Address,
+		Status:      req.Status,
+		Description: req.Description,
+		Contact:     req.Contact,
+		Phone:       req.Phone,
+		Images:      req.Images,
+		HandlerID:   req.HandlerID,
+	}).Error
+}
+
+func (s *RepairService) OrderRecord(req dto.RecordReq) error {
+	if req.Status < 1 || req.Status > 6 {
+		return errors.New("无效的订单状态")
+	}
+	tx := s.app.DB.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+	defer tx.Rollback() // 任何异常都会自动回滚
+	var order model.RepairOrder
+	if err := tx.Model(&model.RepairOrder{}).Where("id = ?", req.ID).First(&order).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("未找到订单记录")
+		}
+		return err
+	}
+	if order.Status == 4 || order.Status == 5 || order.Status == 6 {
+		return errors.New("当前订单不可流转")
+	}
+
+	result := tx.Model(&model.RepairOrder{}).
+		Where("id = ? AND status = ?", req.ID, order.Status). // 核心：乐观锁条件
+		Select("status", "handler_id").
+		Updates(&model.RepairOrder{
+			Status:    req.Status,
+			HandlerID: &req.UserID,
+		})
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.New("订单状态更新失败")
+	}
+
+	if err := tx.Create(&model.RepairRecord{
+		OrderID:    req.ID,
+		OperatorID: req.UserID,
+		OldStatus:  order.Status,
+		NewStatus:  req.Status,
+		Remark:     req.Remark,
+	}).Error; err != nil {
+		return err
+	}
+
+	return tx.Commit().Error
+}
