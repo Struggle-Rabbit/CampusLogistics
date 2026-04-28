@@ -12,7 +12,7 @@ type SysMenu struct {
 	Icon        string    `gorm:"size:64"`
 	Sort        int       `gorm:"default:0"`
 	Status      int       `gorm:"default:1"` // 状态
-	Childen     []SysMenu `json:"childen" gorm:"-"`
+	Children    []SysMenu `json:"children" gorm:"-"`
 	Description string    `gorm:"column:description;size:255" json:"description"` // 描述
 	Roles       []SysRole `gorm:"many2many:sys_role_menu;"`
 }

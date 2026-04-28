@@ -9,7 +9,12 @@ import (
 
 func PermissionValidator(perms string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userId, _ := c.Get("user_id")
+		userId, exists := c.Get("userID")
+		if !exists {
+			utils.Unauth(c, "未登录")
+			c.Abort()
+			return
+		}
 
 		if !CheckPermission(dao.DB, userId.(string), perms) {
 			utils.NoPermission(c)

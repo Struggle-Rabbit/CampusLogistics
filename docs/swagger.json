@@ -45,7 +45,12 @@
                     },
                     {
                         "type": "string",
-                        "name": "operation_at",
+                        "name": "operation_time_end",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "operation_time_start",
                         "in": "query"
                     },
                     {
@@ -58,11 +63,6 @@
                         "type": "string",
                         "name": "user_id",
                         "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "user_name",
-                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -74,6 +74,1449 @@
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/RefreshToken": {
+            "get": {
+                "description": "前端使用refresh_token请求",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "系统模块"
+                ],
+                "summary": "token刷新",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "入参",
+                        "name": "refresh_token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/building/byCampus": {
+            "get": {
+                "description": "根据校区ID获取该校区下的所有楼栋信息，用于下拉框选择",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "楼栋管理"
+                ],
+                "summary": "获取校区下楼栋列表接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "校区ID",
+                        "name": "campus_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingResult"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/building/create": {
+            "post": {
+                "description": "创建新的楼栋信息，包含楼栋编号、名称、楼层数、房间数等，编号唯一性自动校验",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "楼栋管理"
+                ],
+                "summary": "创建楼栋接口",
+                "parameters": [
+                    {
+                        "description": "楼栋创建请求参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingCreateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/building/del": {
+            "post": {
+                "description": "根据楼栋ID列表删除楼栋信息，删除前会检查是否有关联的宿舍",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "楼栋管理"
+                ],
+                "summary": "删除楼栋接口",
+                "parameters": [
+                    {
+                        "description": "删除参数，ids为楼栋ID数组",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/building/detail": {
+            "get": {
+                "description": "根据楼栋ID获取楼栋的详细信息，包含所属校区名称和已分配房间数",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "楼栋管理"
+                ],
+                "summary": "获取楼栋详情接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "楼栋ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/building/export": {
+            "get": {
+                "description": "导出楼栋信息为CSV文件，支持按校区和楼栋编号筛选",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "楼栋管理"
+                ],
+                "summary": "批量导出楼栋接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "building_no",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "campus_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "CSV文件",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/building/import": {
+            "post": {
+                "description": "通过CSV文件批量导入楼栋信息，文件格式：校区名称,楼栋编号,楼栋名称,楼层数,房间数,备注",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "楼栋管理"
+                ],
+                "summary": "批量导入楼栋接口",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "CSV文件",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/building/list": {
+            "get": {
+                "description": "分页查询楼栋信息列表，支持按校区ID、楼栋编号、楼栋名称筛选",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "楼栋管理"
+                ],
+                "summary": "分页查询楼栋列表接口",
+                "parameters": [
+                    {
+                        "description": "查询参数",
+                        "name": "data",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingListPageReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingResult"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/building/update": {
+            "post": {
+                "description": "根据楼栋ID更新楼栋信息，包括楼栋编号、名称、楼层数、房间数等",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "楼栋管理"
+                ],
+                "summary": "更新楼栋接口",
+                "parameters": [
+                    {
+                        "description": "楼栋更新请求参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingUpdateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/campus/all": {
+            "get": {
+                "description": "获取所有校区的简要信息列表，用于下拉框选择等场景",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "校区管理"
+                ],
+                "summary": "获取所有校区接口",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusResult"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/campus/create": {
+            "post": {
+                "description": "创建新的校区信息，包含校区名称、地址、联系方式等基础信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "校区管理"
+                ],
+                "summary": "创建校区接口",
+                "parameters": [
+                    {
+                        "description": "校区创建请求参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusCreateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/campus/del": {
+            "post": {
+                "description": "根据校区ID列表删除校区信息，删除前会检查是否有关联的楼栋",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "校区管理"
+                ],
+                "summary": "删除校区接口",
+                "parameters": [
+                    {
+                        "description": "删除参数，ids为校区ID数组",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/campus/detail": {
+            "get": {
+                "description": "根据校区ID获取校区的详细信息，包含楼栋数量统计",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "校区管理"
+                ],
+                "summary": "获取校区详情接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "校区ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/campus/list": {
+            "get": {
+                "description": "分页查询校区信息列表，支持按校区名称模糊搜索",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "校区管理"
+                ],
+                "summary": "分页查询校区列表接口",
+                "parameters": [
+                    {
+                        "description": "查询参数，page和page_size必填",
+                        "name": "data",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusListPageReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusResult"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/campus/update": {
+            "post": {
+                "description": "根据校区ID更新校区信息，包括校区名称、地址、联系方式等",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "校区管理"
+                ],
+                "summary": "更新校区接口",
+                "parameters": [
+                    {
+                        "description": "校区更新请求参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusUpdateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/dorm/assign": {
+            "post": {
+                "description": "为学生分配宿舍，会检查床位是否已满、用户是否已在其他宿舍入住",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "宿舍管理"
+                ],
+                "summary": "分配宿舍接口",
+                "parameters": [
+                    {
+                        "description": "分配参数，room_id为宿舍ID，user_id为用户ID",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormAssignReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/dorm/checkout": {
+            "post": {
+                "description": "办理学生退宿手续，自动释放床位",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "宿舍管理"
+                ],
+                "summary": "退宿接口",
+                "parameters": [
+                    {
+                        "description": "退宿参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormCheckOutReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/dorm/create": {
+            "post": {
+                "description": "创建新的宿舍信息，包含宿舍编号、所属楼栋、楼层、房间类型、床位数等",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "宿舍管理"
+                ],
+                "summary": "创建宿舍接口",
+                "parameters": [
+                    {
+                        "description": "宿舍创建请求参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormCreateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/dorm/del": {
+            "post": {
+                "description": "根据宿舍ID列表删除宿舍信息，删除前会检查是否有学生入住",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "宿舍管理"
+                ],
+                "summary": "删除宿舍接口",
+                "parameters": [
+                    {
+                        "description": "删除参数，ids为宿舍ID数组",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/dorm/detail": {
+            "get": {
+                "description": "根据宿舍ID获取宿舍的详细信息，包含楼栋名称、校区名称、床位使用情况",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "宿舍管理"
+                ],
+                "summary": "获取宿舍详情接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "宿舍ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/dorm/list": {
+            "get": {
+                "description": "分页查询宿舍信息列表，支持按楼栋、校区、楼层、宿舍类型、状态筛选",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "宿舍管理"
+                ],
+                "summary": "分页查询宿舍列表接口",
+                "parameters": [
+                    {
+                        "description": "查询参数",
+                        "name": "data",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormListPageReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormResult"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/dorm/transfer": {
+            "post": {
+                "description": "将学生从当前宿舍调整到目标宿舍，会检查目标宿舍是否有空床位",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "宿舍管理"
+                ],
+                "summary": "调宿接口",
+                "parameters": [
+                    {
+                        "description": "调宿参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormTransferReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/dorm/update": {
+            "post": {
+                "description": "根据宿舍ID更新宿舍信息，包括宿舍编号、楼层、房间类型、床位数等",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "宿舍管理"
+                ],
+                "summary": "更新宿舍接口",
+                "parameters": [
+                    {
+                        "description": "宿舍更新请求参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormUpdateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/dorm/users": {
+            "get": {
+                "description": "获取指定宿舍的所有在住/历史入住人员列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "宿舍管理"
+                ],
+                "summary": "获取宿舍人员列表接口",
+                "parameters": [
+                    {
+                        "description": "查询参数",
+                        "name": "data",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormUserListReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormUserResult"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/dorm/warning": {
+            "get": {
+                "description": "获取入住率达到80%及以上的宿舍列表，用于预警提醒",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "宿舍管理"
+                ],
+                "summary": "获取宿舍容量预警接口",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormResult"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
                         }
@@ -347,6 +1790,439 @@
                 }
             }
         },
+        "/api/v1/notice/create": {
+            "post": {
+                "description": "创建新的公告信息，支持定时发布，置顶公告最多3条",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "公告管理"
+                ],
+                "summary": "创建公告接口",
+                "parameters": [
+                    {
+                        "description": "公告创建请求参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeCreateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notice/del": {
+            "post": {
+                "description": "根据公告ID列表删除公告信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "公告管理"
+                ],
+                "summary": "删除公告接口",
+                "parameters": [
+                    {
+                        "description": "删除参数，ids为公告ID数组",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notice/detail": {
+            "get": {
+                "description": "根据公告ID获取公告的详细信息，自动增加浏览量",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "公告管理"
+                ],
+                "summary": "获取公告详情接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "公告ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notice/list": {
+            "get": {
+                "description": "分页查询公告信息列表，支持按标题、类型、置顶状态、时间范围筛选（管理员接口）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "公告管理"
+                ],
+                "summary": "分页查询公告列表接口",
+                "parameters": [
+                    {
+                        "description": "查询参数",
+                        "name": "data",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeListPageReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeResult"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notice/public": {
+            "get": {
+                "description": "获取已发布的公告列表（公开接口，无需登录），仅返回发布时间早于当前时间的公告",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "公告管理"
+                ],
+                "summary": "获取公开公告列表接口",
+                "parameters": [
+                    {
+                        "description": "查询参数",
+                        "name": "data",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeListPageReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticePublicResult"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notice/top": {
+            "post": {
+                "description": "设置或取消公告的置顶状态，置顶公告最多3条",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "公告管理"
+                ],
+                "summary": "设置公告置顶接口",
+                "parameters": [
+                    {
+                        "description": "置顶参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeTopReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notice/update": {
+            "post": {
+                "description": "根据公告ID更新公告信息，支持修改发布时间和置顶状态",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "公告管理"
+                ],
+                "summary": "更新公告接口",
+                "parameters": [
+                    {
+                        "description": "公告更新请求参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeUpdateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/register": {
             "post": {
                 "description": "注册新用户",
@@ -368,6 +2244,329 @@
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.RegisterReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/repair/del": {
+            "post": {
+                "description": "软删除报修单及关联记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "报修管理"
+                ],
+                "summary": "删除报修单",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "报修单ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/repair/detail": {
+            "get": {
+                "description": "根据ID查询详情，包含流转记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "报修管理"
+                ],
+                "summary": "查询报修单详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "报修单ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.RepairOrderResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/repair/list": {
+            "get": {
+                "description": "支持按单号、类型、状态、时间范围等条件筛选",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "报修管理"
+                ],
+                "summary": "分页查询报修单",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "联系人",
+                        "name": "contact",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "当前页",
+                        "name": "currentPage",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "结束时间 (2006-01-02 15:04:05)",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "handler_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_no",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "联系电话",
+                        "name": "phone",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "报修类型：1-水电 2-家具 3-网络 4-其他",
+                        "name": "repair_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "开始时间 (2006-01-02 15:04:05)",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.RepairOrderResult"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/repair/record": {
+            "post": {
+                "description": "记录处理过程并更新状态",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "报修管理"
+                ],
+                "summary": "报修单状态流转",
+                "parameters": [
+                    {
+                        "description": "流转信息",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.RecordReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/repair/submit": {
+            "post": {
+                "description": "学生或教职工提交报修申请",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "报修管理"
+                ],
+                "summary": "提交报修单",
+                "parameters": [
+                    {
+                        "description": "报修信息",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.RepairOrderSubmitReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/repair/update": {
+            "post": {
+                "description": "仅限待分配状态编辑",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "报修管理"
+                ],
+                "summary": "更新报修单信息",
+                "parameters": [
+                    {
+                        "description": "更新信息",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UpdateRepairOrderSubmitReq"
                         }
                     }
                 ],
@@ -859,13 +3058,1042 @@
                     }
                 }
             }
+        },
+        "/api/v1/user/resetPassword": {
+            "post": {
+                "description": "重置密码",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户管理"
+                ],
+                "summary": "重置密码接口",
+                "parameters": [
+                    {
+                        "description": "入参",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PasswordReset"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/utility/batchPay": {
+            "post": {
+                "description": "批量为多个水电费记录进行缴费操作",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "水电费管理"
+                ],
+                "summary": "批量缴费接口",
+                "parameters": [
+                    {
+                        "description": "批量缴费参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityBatchPayReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/utility/create": {
+            "post": {
+                "description": "录入宿舍水电费用量数据，自动计算费用，同一宿舍同月份记录不能重复",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "水电费管理"
+                ],
+                "summary": "创建水电费记录接口",
+                "parameters": [
+                    {
+                        "description": "水电费记录创建请求参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityCreateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/utility/del": {
+            "post": {
+                "description": "删除水电费记录，已缴费记录不允许删除",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "水电费管理"
+                ],
+                "summary": "删除水电费记录接口",
+                "parameters": [
+                    {
+                        "description": "删除参数，ids为记录ID数组",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/utility/detail": {
+            "get": {
+                "description": "根据记录ID获取水电费的详细信息，包含用量、单价、费用明细",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "水电费管理"
+                ],
+                "summary": "获取水电费详情接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "记录ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/utility/list": {
+            "get": {
+                "description": "分页查询水电费记录列表，支持按宿舍、校区、楼栋、年月、缴费状态筛选",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "水电费管理"
+                ],
+                "summary": "分页查询水电费记录接口",
+                "parameters": [
+                    {
+                        "description": "查询参数",
+                        "name": "data",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityListPageReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityResult"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/utility/myUtility": {
+            "get": {
+                "description": "获取当前登录用户所在宿舍的水电费记录（需登录认证）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "水电费管理"
+                ],
+                "summary": "获取用户水电费接口",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "年份",
+                        "name": "year",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "月份",
+                        "name": "month",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityResult"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/utility/pay": {
+            "post": {
+                "description": "为指定水电费记录进行缴费操作",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "水电费管理"
+                ],
+                "summary": "缴费接口",
+                "parameters": [
+                    {
+                        "description": "缴费参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityPayReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/utility/price": {
+            "get": {
+                "description": "获取当前的水费和电费单价配置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "水电费管理"
+                ],
+                "summary": "获取水电单价接口",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityPriceResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "更新水费和电费的单价配置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "水电费管理"
+                ],
+                "summary": "更新水电单价接口",
+                "parameters": [
+                    {
+                        "description": "单价配置参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityPriceReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/utility/statistics": {
+            "get": {
+                "description": "按校区和月份统计水电费使用量和费用情况",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "水电费管理"
+                ],
+                "summary": "获取水电费统计接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "校区ID",
+                        "name": "campus_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "年份",
+                        "name": "year",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "月份",
+                        "name": "month",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityStatResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/utility/update": {
+            "post": {
+                "description": "更新宿舍水电费用量数据，已缴费记录不允许修改",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "水电费管理"
+                ],
+                "summary": "更新水电费记录接口",
+                "parameters": [
+                    {
+                        "description": "水电费记录更新请求参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityUpdateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/utility/warning": {
+            "get": {
+                "description": "获取当前欠费的水电费记录列表，用于催缴提醒",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "水电费管理"
+                ],
+                "summary": "获取欠费预警接口",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityResult"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingCreateReq": {
+            "type": "object",
+            "required": [
+                "building_name",
+                "building_no",
+                "campus_id",
+                "floor_count",
+                "room_count"
+            ],
+            "properties": {
+                "building_name": {
+                    "description": "楼栋名称",
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "building_no": {
+                    "description": "楼栋编号",
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "campus_id": {
+                    "description": "校区ID",
+                    "type": "string"
+                },
+                "floor_count": {
+                    "description": "楼层数",
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "remark": {
+                    "description": "备注",
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "room_count": {
+                    "description": "房间数",
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingListPageReq": {
+            "type": "object",
+            "properties": {
+                "building_name": {
+                    "description": "楼栋名称",
+                    "type": "string"
+                },
+                "building_no": {
+                    "description": "楼栋编号",
+                    "type": "string"
+                },
+                "campus_id": {
+                    "description": "校区ID",
+                    "type": "string"
+                },
+                "currentPage": {
+                    "description": "当前页",
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "description": "每页条数",
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingResult": {
+            "type": "object",
+            "properties": {
+                "building_name": {
+                    "type": "string"
+                },
+                "building_no": {
+                    "type": "string"
+                },
+                "campus_id": {
+                    "type": "string"
+                },
+                "campus_name": {
+                    "description": "校区名称",
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "floor_count": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "room_count": {
+                    "type": "integer"
+                },
+                "room_used_count": {
+                    "description": "已分配房间数",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingUpdateReq": {
+            "type": "object",
+            "required": [
+                "building_name",
+                "building_no",
+                "campus_id",
+                "floor_count",
+                "id",
+                "room_count"
+            ],
+            "properties": {
+                "building_name": {
+                    "description": "楼栋名称",
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "building_no": {
+                    "description": "楼栋编号",
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "campus_id": {
+                    "description": "校区ID",
+                    "type": "string"
+                },
+                "floor_count": {
+                    "description": "楼层数",
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "id": {
+                    "description": "楼栋ID",
+                    "type": "string"
+                },
+                "remark": {
+                    "description": "备注",
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "room_count": {
+                    "description": "房间数",
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusCreateReq": {
+            "type": "object",
+            "required": [
+                "campus_name"
+            ],
+            "properties": {
+                "address": {
+                    "description": "校区地址",
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "campus_name": {
+                    "description": "校区名称",
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "contact": {
+                    "description": "联系方式",
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "phone": {
+                    "description": "联系电话",
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "remark": {
+                    "description": "备注",
+                    "type": "string",
+                    "maxLength": 500
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusListPageReq": {
+            "type": "object",
+            "properties": {
+                "campus_name": {
+                    "description": "校区名称",
+                    "type": "string"
+                },
+                "currentPage": {
+                    "description": "当前页",
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "description": "每页条数",
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusResult": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "building_count": {
+                    "description": "楼栋数量",
+                    "type": "integer"
+                },
+                "campus_name": {
+                    "type": "string"
+                },
+                "contact": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusUpdateReq": {
+            "type": "object",
+            "required": [
+                "campus_name",
+                "id"
+            ],
+            "properties": {
+                "address": {
+                    "description": "校区地址",
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "campus_name": {
+                    "description": "校区名称",
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "contact": {
+                    "description": "联系方式",
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "id": {
+                    "description": "校区ID",
+                    "type": "string"
+                },
+                "phone": {
+                    "description": "联系电话",
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "remark": {
+                    "description": "备注",
+                    "type": "string",
+                    "maxLength": 500
+                }
+            }
+        },
         "github_com_Struggle-Rabbit_CampusLogistics_api_dto.CreateMenuReq": {
             "type": "object",
             "required": [
                 "name",
+                "parent_id",
                 "perms",
                 "status",
                 "type"
@@ -921,9 +4149,6 @@
                 "description": {
                     "type": "string"
                 },
-                "is_built_in": {
-                    "type": "integer"
-                },
                 "role_code": {
                     "type": "string"
                 },
@@ -931,6 +4156,323 @@
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormAssignReq": {
+            "type": "object",
+            "required": [
+                "room_id",
+                "user_id"
+            ],
+            "properties": {
+                "room_id": {
+                    "description": "宿舍ID",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "用户ID",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormCheckOutReq": {
+            "type": "object",
+            "required": [
+                "room_id",
+                "user_id"
+            ],
+            "properties": {
+                "room_id": {
+                    "description": "宿舍ID",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "用户ID",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormCreateReq": {
+            "type": "object",
+            "required": [
+                "building_id",
+                "floor",
+                "max_count",
+                "room_no",
+                "room_type"
+            ],
+            "properties": {
+                "building_id": {
+                    "description": "楼栋ID",
+                    "type": "string"
+                },
+                "floor": {
+                    "description": "楼层",
+                    "type": "integer"
+                },
+                "max_count": {
+                    "description": "最大入住人数",
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "remark": {
+                    "description": "备注",
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "room_no": {
+                    "description": "宿舍编号",
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "room_type": {
+                    "description": "宿舍类型：1-4人间 2-6人间 3-8人间 4-其他",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        3,
+                        4
+                    ]
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormListPageReq": {
+            "type": "object",
+            "properties": {
+                "building_id": {
+                    "description": "楼栋ID",
+                    "type": "string"
+                },
+                "campus_id": {
+                    "description": "校区ID",
+                    "type": "string"
+                },
+                "currentPage": {
+                    "description": "当前页",
+                    "type": "integer"
+                },
+                "floor": {
+                    "description": "楼层",
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "description": "每页条数",
+                    "type": "integer"
+                },
+                "room_type": {
+                    "description": "宿舍类型",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "状态：1-可入住 2-已满 3-装修中",
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormResult": {
+            "type": "object",
+            "properties": {
+                "available_bed": {
+                    "description": "剩余床位",
+                    "type": "integer"
+                },
+                "building_id": {
+                    "type": "string"
+                },
+                "building_name": {
+                    "description": "楼栋名称",
+                    "type": "string"
+                },
+                "campus_id": {
+                    "type": "string"
+                },
+                "campus_name": {
+                    "description": "校区名称",
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "current_count": {
+                    "type": "integer"
+                },
+                "fill_rate": {
+                    "description": "入住率",
+                    "type": "number"
+                },
+                "floor": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "max_count": {
+                    "type": "integer"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "room_no": {
+                    "type": "string"
+                },
+                "room_type": {
+                    "description": "宿舍类型：1-4人间 2-6人间 3-8人间 4-其他",
+                    "type": "integer"
+                },
+                "room_type_name": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态：1-可入住 2-已满 3-装修中",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormTransferReq": {
+            "type": "object",
+            "required": [
+                "room_id",
+                "target_room_id",
+                "user_id"
+            ],
+            "properties": {
+                "room_id": {
+                    "description": "当前宿舍ID",
+                    "type": "string"
+                },
+                "target_room_id": {
+                    "description": "目标宿舍ID",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "用户ID",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormUpdateReq": {
+            "type": "object",
+            "required": [
+                "building_id",
+                "floor",
+                "id",
+                "max_count",
+                "room_no",
+                "room_type"
+            ],
+            "properties": {
+                "building_id": {
+                    "description": "楼栋ID",
+                    "type": "string"
+                },
+                "floor": {
+                    "description": "楼层",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "宿舍ID",
+                    "type": "string"
+                },
+                "max_count": {
+                    "description": "最大入住人数",
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "remark": {
+                    "description": "备注",
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "room_no": {
+                    "description": "宿舍编号",
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "room_type": {
+                    "description": "宿舍类型：1-4人间 2-6人间 3-8人间 4-其他",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        3,
+                        4
+                    ]
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormUserListReq": {
+            "type": "object",
+            "properties": {
+                "currentPage": {
+                    "description": "当前页",
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "description": "每页条数",
+                    "type": "integer"
+                },
+                "room_id": {
+                    "description": "宿舍ID",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态：1-在住 2-已迁出",
+                    "type": "integer"
+                },
+                "user_id": {
+                    "description": "用户学号/工号",
+                    "type": "string"
+                },
+                "user_name": {
+                    "description": "用户姓名",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormUserResult": {
+            "type": "object",
+            "properties": {
+                "building_name": {
+                    "description": "楼栋名称",
+                    "type": "string"
+                },
+                "campus_name": {
+                    "description": "校区名称",
+                    "type": "string"
+                },
+                "check_in_time": {
+                    "type": "string"
+                },
+                "check_out_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "string"
+                },
+                "room_no": {
+                    "description": "宿舍编号",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态：1-在住 2-已迁出",
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "user_name": {
+                    "type": "string"
+                },
+                "user_type": {
                     "type": "string"
                 }
             }
@@ -949,6 +4491,292 @@
                 "password": {
                     "type": "string",
                     "example": "12345678"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeCreateReq": {
+            "type": "object",
+            "required": [
+                "content",
+                "notice_type",
+                "publish_time",
+                "title"
+            ],
+            "properties": {
+                "attachments": {
+                    "description": "附件URL列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "content": {
+                    "description": "公告内容",
+                    "type": "string"
+                },
+                "is_top": {
+                    "description": "是否置顶：1-是 2-否",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ]
+                },
+                "notice_type": {
+                    "description": "公告类型：1-后勤通知 2-校园通知 3-紧急通知",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        3
+                    ]
+                },
+                "publish_time": {
+                    "description": "发布时间",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "公告标题",
+                    "type": "string",
+                    "maxLength": 200
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeListPageReq": {
+            "type": "object",
+            "properties": {
+                "currentPage": {
+                    "description": "当前页",
+                    "type": "integer"
+                },
+                "end_time": {
+                    "description": "结束时间",
+                    "type": "string"
+                },
+                "is_top": {
+                    "description": "是否置顶",
+                    "type": "integer"
+                },
+                "notice_type": {
+                    "description": "公告类型",
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "description": "每页条数",
+                    "type": "integer"
+                },
+                "start_time": {
+                    "description": "开始时间",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "公告标题",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticePublicResult": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "content": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "notice_type": {
+                    "type": "integer"
+                },
+                "notice_type_name": {
+                    "type": "string"
+                },
+                "publish_time": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "view_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeResult": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "creator_id": {
+                    "type": "string"
+                },
+                "creator_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_top": {
+                    "type": "integer"
+                },
+                "is_top_name": {
+                    "type": "string"
+                },
+                "notice_type": {
+                    "type": "integer"
+                },
+                "notice_type_name": {
+                    "type": "string"
+                },
+                "publish_time": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "view_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeTopReq": {
+            "type": "object",
+            "required": [
+                "id",
+                "is_top"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "is_top": {
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ]
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeUpdateReq": {
+            "type": "object",
+            "required": [
+                "content",
+                "id",
+                "notice_type",
+                "title"
+            ],
+            "properties": {
+                "attachments": {
+                    "description": "附件URL列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "content": {
+                    "description": "公告内容",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "公告ID",
+                    "type": "string"
+                },
+                "is_top": {
+                    "description": "是否置顶：1-是 2-否",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ]
+                },
+                "notice_type": {
+                    "description": "公告类型：1-后勤通知 2-校园通知 3-紧急通知",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        3
+                    ]
+                },
+                "publish_time": {
+                    "description": "发布时间",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "公告标题",
+                    "type": "string",
+                    "maxLength": 200
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult": {
+            "type": "object",
+            "properties": {
+                "currentPage": {
+                    "description": "当前页",
+                    "type": "integer"
+                },
+                "list": {
+                    "description": "数据列表"
+                },
+                "pageSize": {
+                    "description": "每页条数",
+                    "type": "integer"
+                },
+                "total": {
+                    "description": "总条数",
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.PasswordReset": {
+            "type": "object",
+            "properties": {
+                "mobile": {
+                    "type": "string"
+                },
+                "new_password": {
+                    "type": "string"
+                },
+                "old_password": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.RecordReq": {
+            "type": "object",
+            "required": [
+                "id",
+                "status"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
                 }
             }
         },
@@ -983,6 +4811,136 @@
                         "02"
                     ],
                     "example": "02"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.RepairOrderResult": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "description": "报修地点",
+                    "type": "string"
+                },
+                "contact": {
+                    "description": "联系人",
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "description": "问题描述",
+                    "type": "string"
+                },
+                "handler_id": {
+                    "description": "处理人学号/工号（指针类型允许为空）",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "images": {
+                    "description": "图片URL列表（JSON序列化）",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "order_no": {
+                    "description": "报修单号（唯一）",
+                    "type": "string"
+                },
+                "phone": {
+                    "description": "联系电话",
+                    "type": "string"
+                },
+                "records": {
+                    "description": "流转记录",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.RepairRecordResult"
+                    }
+                },
+                "repair_type": {
+                    "description": "报修类型：1-水电 2-家具 3-网络 4-其他",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "状态：1-待分配 2-待处理 3-处理中 4-已完成 5-已驳回 6-已撤销",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "提交人学号/工号",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.RepairOrderSubmitReq": {
+            "type": "object",
+            "required": [
+                "address",
+                "contact",
+                "description",
+                "images",
+                "phone",
+                "repair_type"
+            ],
+            "properties": {
+                "address": {
+                    "description": "报修地点",
+                    "type": "string"
+                },
+                "contact": {
+                    "description": "联系人",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "问题描述",
+                    "type": "string"
+                },
+                "images": {
+                    "description": "图片URL列表（JSON序列化）",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "phone": {
+                    "description": "联系电话",
+                    "type": "string"
+                },
+                "repair_type": {
+                    "description": "报修类型：1-水电 2-家具 3-网络 4-其他",
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.RepairRecordResult": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "new_status": {
+                    "type": "integer"
+                },
+                "old_status": {
+                    "type": "integer"
+                },
+                "operator_id": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
                 }
             }
         },
@@ -1034,6 +4992,53 @@
                 }
             }
         },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.UpdateRepairOrderSubmitReq": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "address": {
+                    "description": "报修地点",
+                    "type": "string"
+                },
+                "contact": {
+                    "description": "联系人",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "问题描述",
+                    "type": "string"
+                },
+                "handler_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "images": {
+                    "description": "图片URL列表（JSON序列化）",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "order_no": {
+                    "type": "string"
+                },
+                "phone": {
+                    "description": "联系电话",
+                    "type": "string"
+                },
+                "repair_type": {
+                    "description": "报修类型：1-水电 2-家具 3-网络 4-其他",
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
         "github_com_Struggle-Rabbit_CampusLogistics_api_dto.UpdateRoleReq": {
             "type": "object",
             "required": [
@@ -1045,9 +5050,6 @@
                 },
                 "id": {
                     "type": "string"
-                },
-                "is_built_in": {
-                    "type": "integer"
                 },
                 "role_code": {
                     "type": "string"
@@ -1082,13 +5084,254 @@
                     "description": "状态：1-启用 2-禁用",
                     "type": "integer"
                 },
-                "user_code": {
-                    "description": "学号/工号（唯一）",
-                    "type": "string"
-                },
                 "user_type": {
                     "description": "用户类型: 00-管理员  01-职工  02-学生",
                     "type": "string"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityBatchPayReq": {
+            "type": "object",
+            "required": [
+                "ids"
+            ],
+            "properties": {
+                "ids": {
+                    "description": "记录ID列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityCreateReq": {
+            "type": "object",
+            "required": [
+                "month",
+                "room_id",
+                "year"
+            ],
+            "properties": {
+                "electric_usage": {
+                    "description": "用电量（度）",
+                    "type": "number",
+                    "minimum": 0
+                },
+                "month": {
+                    "description": "月份",
+                    "type": "integer",
+                    "maximum": 12,
+                    "minimum": 1
+                },
+                "room_id": {
+                    "description": "宿舍ID",
+                    "type": "string"
+                },
+                "water_usage": {
+                    "description": "用水量（吨）",
+                    "type": "number",
+                    "minimum": 0
+                },
+                "year": {
+                    "description": "年份",
+                    "type": "integer",
+                    "maximum": 2100,
+                    "minimum": 2020
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityListPageReq": {
+            "type": "object",
+            "properties": {
+                "building_id": {
+                    "description": "楼栋ID",
+                    "type": "string"
+                },
+                "campus_id": {
+                    "description": "校区ID",
+                    "type": "string"
+                },
+                "currentPage": {
+                    "description": "当前页",
+                    "type": "integer"
+                },
+                "month": {
+                    "description": "月份",
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "description": "每页条数",
+                    "type": "integer"
+                },
+                "pay_status": {
+                    "description": "缴费状态：1-未缴费 2-已缴费",
+                    "type": "integer"
+                },
+                "room_id": {
+                    "description": "宿舍ID",
+                    "type": "string"
+                },
+                "year": {
+                    "description": "年份",
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityPayReq": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "description": "记录ID",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityPriceReq": {
+            "type": "object",
+            "required": [
+                "electric_price",
+                "water_price"
+            ],
+            "properties": {
+                "electric_price": {
+                    "description": "电价（元/度）",
+                    "type": "number",
+                    "minimum": 0
+                },
+                "water_price": {
+                    "description": "水价（元/吨）",
+                    "type": "number",
+                    "minimum": 0
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityPriceResult": {
+            "type": "object",
+            "properties": {
+                "electric_price": {
+                    "type": "number"
+                },
+                "water_price": {
+                    "type": "number"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityResult": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "building_id": {
+                    "type": "string"
+                },
+                "building_name": {
+                    "description": "楼栋名称",
+                    "type": "string"
+                },
+                "campus_id": {
+                    "type": "string"
+                },
+                "campus_name": {
+                    "description": "校区名称",
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "electric_amount": {
+                    "description": "电费",
+                    "type": "number"
+                },
+                "electric_price": {
+                    "description": "电价",
+                    "type": "number"
+                },
+                "electric_usage": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "month": {
+                    "type": "integer"
+                },
+                "pay_status": {
+                    "description": "缴费状态：1-未缴费 2-已缴费",
+                    "type": "integer"
+                },
+                "pay_status_name": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "string"
+                },
+                "room_no": {
+                    "description": "宿舍编号",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "water_amount": {
+                    "description": "水费",
+                    "type": "number"
+                },
+                "water_price": {
+                    "description": "水价",
+                    "type": "number"
+                },
+                "water_usage": {
+                    "type": "number"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityStatResult": {
+            "type": "object",
+            "properties": {
+                "total_amount": {
+                    "type": "number"
+                },
+                "total_electric_usage": {
+                    "type": "number"
+                },
+                "total_water_usage": {
+                    "type": "number"
+                },
+                "unpaid_amount": {
+                    "type": "number"
+                },
+                "unpaid_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityUpdateReq": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "electric_usage": {
+                    "description": "用电量（度）",
+                    "type": "number",
+                    "minimum": 0
+                },
+                "id": {
+                    "description": "记录ID",
+                    "type": "string"
+                },
+                "water_usage": {
+                    "description": "用水量（吨）",
+                    "type": "number",
+                    "minimum": 0
                 }
             }
         },

@@ -59,13 +59,38 @@ func (s *UserController) DelUser(c *gin.Context) {
 // @Router /api/v1/user/listPage [post]
 func (s *UserController) UpdateUser(c *gin.Context) {
 	var userReq dto.UserUpdateReq
-	_ = utils.ShouldBind(c, &userReq)
+	if !utils.ShouldBind(c, &userReq) {
+		return
+	}
 
 	if err := s.srv.UserService.UpdateUser(&userReq); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
 	utils.Success(c)
+}
+
+// ResetPassword 重置密码
+// @Summary 重置密码接口
+// @Description 重置密码
+// @Tags 用户管理
+// @Accept json
+// @Produce json
+// @Param data body dto.PasswordReset true "入参"
+// @Success 200 {object} utils.SuccessResponse
+// @Failure 400 {object} utils.ErrResponse
+// @Router /api/v1/user/resetPassword [post]
+func (s *UserController) ResetPassword(c *gin.Context) {
+	var resetReq dto.PasswordReset
+	if !utils.ShouldBind(c, &resetReq) {
+		return
+	}
+
+	if err := s.srv.UserService.ResetPassword(&resetReq); err != nil {
+		utils.Fail(c, err.Error())
+		return
+	}
+	utils.Success(c, "密码重置成功")
 }
 
 // GetListByPage 用户分页
@@ -80,7 +105,9 @@ func (s *UserController) UpdateUser(c *gin.Context) {
 // @Router /api/v1/user/listPage [get]
 func (s *UserController) GetListByPage(c *gin.Context) {
 	var userReq dto.UserListPageReq
-	_ = utils.ShouldBind(c, &userReq)
+	if !utils.ShouldBind(c, &userReq) {
+		return
+	}
 
 	res, err := s.srv.UserService.GetListByPage(&userReq)
 	if err != nil {
@@ -89,18 +116,6 @@ func (s *UserController) GetListByPage(c *gin.Context) {
 	}
 	utils.Success(c, res, "获取成功")
 }
-
-// func (s *UserController) GetList(c *gin.Context) {
-// 	var userReq dto.UserListReq
-// 	_ = utils.ShouldBind(c, &userReq)
-
-// 	res, err := s.srv.UserService.(&userReq)
-// 	if err != nil {
-// 		utils.Fail(c, err.Error())
-// 		return
-// 	}
-// 	utils.Success(c, res, "获取成功")
-// }
 
 // QueryDetail 用户详情
 // @Summary 用户详情查询接口

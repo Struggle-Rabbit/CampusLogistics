@@ -71,11 +71,16 @@ func InitConfig() error {
 	v.SetConfigName(fmt.Sprintf("config-%s", env))     // 设置配置文件是哪一个，根据获取道德ENV的值来确定
 	v.SetConfigType("yaml")                            // 设置配置文件类型
 	v.AddConfigPath("configs")                         // 设置需要读取的配置文件的路径，在哪个文件夹下
-	v.AutomaticEnv()                                   // 待学习
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_")) // 覆盖配置中下划线替换为点，类似于DB_Name替换为DB.Name  待学习
+	v.AutomaticEnv()                                   // 自动读取环境变量
+	v.SetEnvPrefix("APP")                              // 环境变量前缀，如 APP_JWT_SECRET
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_")) // 覆盖配置中下划线替换为点
 
 	if err := v.ReadInConfig(); err != nil { // 读取文件，读取配置
-		return fmt.Errorf("读取配置文件失败: %w", err)
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			return fmt.Errorf("读取配置文件失败: %w", err)
+		}
+		// 如果没找到配置文件，可以继续，因为可能完全依赖环境变量
+		fmt.Println("未找到配置文件，将使用默认配置或环境变量")
 	}
 
 	GlobalConfig = &Config{}

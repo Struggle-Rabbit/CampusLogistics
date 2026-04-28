@@ -10,6 +10,7 @@ import (
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/menu"
+	"github.com/Struggle-Rabbit/CampusLogistics/pkg/constant"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -31,33 +32,35 @@ func NewUserService(app *app.App, menuSvc *menu.MenuService) *UserService {
 
 // Register 用户注册
 func (s *UserService) Register(req *dto.RegisterReq) error {
-	// 检查是否已存在
-	var existUser model.SysUser
-	var total int64
-	db := s.app.DB.Model(&model.SysUser{})
-	db.Count(&total)
-	err := db.Where("mobile = ?", req.Mobile).First(&existUser).Error
-	if err == nil {
-		return errors.New("手机号已注册")
-	}
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err
-	}
+	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+		// 检查是否已存在
+		var total int64
+		if err := tx.Model(&model.SysUser{}).Where("mobile = ?", req.Mobile).Count(&total).Error; err != nil {
+			return err
+		}
+		if total > 0 {
+			return errors.New("手机号已注册")
+		}
 
-	hashedPassword, err := utils.HashedPasswordFunc(req.Password)
-	if err != nil {
-		return err
-	}
+		hashedPassword, err := utils.HashedPasswordFunc(req.Password)
+		if err != nil {
+			return err
+		}
 
-	// 生成根据时间的自增工号
-	return s.app.DB.Create(&model.SysUser{
-		Name:     req.Name,
-		Mobile:   req.Mobile,
-		Password: hashedPassword,
-		UserCode: fmt.Sprintf("%s00%d", time.Now().Format("20060102"), total+1),
-		Status:   1,
-		UserType: req.UserType,
-	}).Error
+		// 获取当前总数用于生成工号
+		var count int64
+		tx.Model(&model.SysUser{}).Count(&count)
+
+		// 生成根据时间的自增工号
+		return tx.Create(&model.SysUser{
+			Name:     req.Name,
+			Mobile:   req.Mobile,
+			Password: hashedPassword,
+			UserCode: fmt.Sprintf("%s00%d", time.Now().Format("20060102"), count+1),
+			Status:   constant.UserStatusEnable,
+			UserType: req.UserType,
+		}).Error
+	})
 }
 
 func (s *UserService) Login(req *dto.LoginReq) (*dto.LoginResult, error) {
@@ -196,6 +199,33 @@ func (s *UserService) UpdateUser(req *dto.UserUpdateReq) error {
 func (s *UserService) DelUser(id []string) error {
 
 	return s.app.DB.Delete(&model.SysUser{}, id).Error
+}
+
+// ResetPassword 重置密码
+func (s *UserService) ResetPassword(req *dto.PasswordReset) error {
+	var user model.SysUser
+	// 查找用户
+	err := s.app.DB.Where("mobile = ?", req.Mobile).First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("用户不存在")
+		}
+		return err
+	}
+
+	// 校验原密码
+	if err := utils.VerifyPasswordFunc(user.Password, req.OldPassword); err != nil {
+		return errors.New("原密码错误")
+	}
+
+	// 加密新密码
+	hashedPassword, err := utils.HashedPasswordFunc(req.NewPassword)
+	if err != nil {
+		return err
+	}
+
+	// 更新密码
+	return s.app.DB.Model(&user).Update("password", hashedPassword).Error
 }
 
 func (s *UserService) GetUserPermission(user_id string) (*dto.UserPermissionResult, error) {

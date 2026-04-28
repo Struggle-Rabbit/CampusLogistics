@@ -31,7 +31,7 @@ func (s *MenuService) CreateMenu(req *dto.CreateMenuReq) error {
 		Description: req.Description,
 	}
 
-	if req.Type == 3 {
+	if req.Type == 2 {
 		if req.Path == "" {
 			return errors.New("路由地址不能为空！")
 		}
@@ -46,28 +46,28 @@ func (s *MenuService) CreateMenu(req *dto.CreateMenuReq) error {
 }
 
 func (s *MenuService) UpdateMenu(req *dto.UpdateMenuReq) error {
-	menu := &model.SysMenu{
-		ParentID:    req.ParentID,
-		Name:        req.Name,
-		Type:        req.Type,
-		Perms:       req.Perms,
-		Status:      req.Status,
-		Sort:        req.Sort,
-		Icon:        req.Icon,
-		Description: req.Description,
-	}
-
-	if req.Type == 3 {
+	if req.Type == 2 {
 		if req.Path == "" {
-			return errors.New("路由地址不能为空！")
+			return errors.New("菜单路由地址不能为空")
 		}
 		if req.Component == "" {
 			return errors.New("组件地址不能为空")
 		}
-		menu.Path = req.Path
-		menu.Component = req.Component
 	}
-	return s.app.DB.Where("id = ?", req.ID).Updates(&menu).Error
+	updateData := map[string]interface{}{
+		"parent_id":   req.ParentID,
+		"name":        req.Name,
+		"type":        req.Type,
+		"perms":       req.Perms,
+		"status":      req.Status,
+		"sort":        req.Sort,
+		"icon":        req.Icon,
+		"description": req.Description,
+		"path":        req.Path,
+		"component":   req.Component,
+	}
+
+	return s.app.DB.Model(&model.SysMenu{}).Where("id = ?", req.ID).Updates(updateData).Error
 }
 
 func (s *MenuService) DelMenu(id []string) error {
@@ -77,53 +77,52 @@ func (s *MenuService) DelMenu(id []string) error {
 
 func (s *MenuService) GetMenuList(req *dto.MenuListReq) ([]dto.MenuResult, error) {
 	var menuSqlRes []model.SysMenu
-	db := s.app.DB.Model(&model.SysMenu{})
-	if req.Name != nil {
-		db.Where("name LIKE ?", "%"+*req.Name+"%")
+	tx := s.app.DB.Model(&model.SysMenu{})
+	if req.Name != nil && *req.Name != "" {
+		tx = tx.Where("name LIKE ?", "%"+*req.Name+"%")
 	}
 	if req.Type != nil {
-		db.Where("type = ?", *req.Type)
+		tx = tx.Where("type = ?", *req.Type)
 	}
 	if req.Status != nil {
-		db.Where("status = ?", *req.Status)
+		tx = tx.Where("status = ?", *req.Status)
 	}
 	if req.ParentID != nil {
-		db.Where("parent_id = ?", *req.ParentID)
+		tx = tx.Where("parent_id = ?", *req.ParentID)
 	}
-	if req.Perms != nil {
-		db.Where("perms LIKE ?", "%"+*req.Perms+"%")
+	if req.Perms != nil && *req.Perms != "" {
+		tx = tx.Where("perms LIKE ?", "%"+*req.Perms+"%")
 	}
 
-	db.Find(&menuSqlRes)
+	if err := tx.Find(&menuSqlRes).Error; err != nil {
+		return nil, err
+	}
 
 	menuTree := s.BuildMenuTree(menuSqlRes)
 	return menuTree, nil
 }
 
 func (s *MenuService) GetMenuListByPage(req *dto.MenuListByPageReq) (*dto.PageResult, error) {
+	var list []model.SysMenu
 	var total int64
 	db := s.app.DB.Model(&model.SysMenu{})
 	if err := db.Where("parent_id = ?", "0").Count(&total).Error; err != nil {
 		return nil, err
 	}
-	if req.Name != nil {
-		db.Where("name LIKE ?", "%"+*req.Name+"%")
+	if req.Name != nil && *req.Name != "" {
+		db = db.Where("name LIKE ?", "%"+*req.Name+"%")
 	}
 	if req.Type != nil {
-		db.Where("type = ?", *req.Type)
+		db = db.Where("type = ?", *req.Type)
 	}
 	if req.Status != nil {
-		db.Where("status = ?", *req.Status)
+		db = db.Where("status = ?", *req.Status)
 	}
 	if req.ParentID != nil {
-		db.Where("parent_id = ?", *req.ParentID)
+		db = db.Where("parent_id = ?", *req.ParentID)
 	}
-	if req.Perms != nil {
-		db.Where("perms LIKE ?", "%"+*req.Perms+"%")
-	}
-	var list []model.SysMenu
-
-	if err := db.Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Find(&list).Error; err != nil {
+	err := db.Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Find(&list).Error
+	if err != nil {
 		return nil, err
 	}
 
@@ -138,20 +137,34 @@ func (s *MenuService) GetMenuListByPage(req *dto.MenuListByPageReq) (*dto.PageRe
 }
 
 func (s *MenuService) MenuDetailById(id string) (*dto.MenuResult, error) {
-	var menuResult dto.MenuResult
-
-	if err := s.app.DB.Model(&model.SysMenu{}).Where("id = ?", id).Scan(&menuResult).Error; err != nil {
+	var m model.SysMenu
+	err := s.app.DB.Where("id = ?", id).First(&m).Error
+	if err != nil {
 		return nil, err
 	}
 
-	return &menuResult, nil
+	return &dto.MenuResult{
+		ID:          m.ID,
+		ParentID:    m.ParentID,
+		Name:        m.Name,
+		Path:        m.Path,
+		Component:   m.Component,
+		Type:        m.Type,
+		Perms:       m.Perms,
+		Icon:        m.Icon,
+		Sort:        m.Sort,
+		Status:      m.Status,
+		Description: m.Description,
+		CreatedAt:   m.CreatedAt,
+		UpdatedAt:   m.UpdatedAt,
+	}, nil
 }
 
-// 处理树形菜单结构
+// BuildMenuTree 处理树形菜单结构
 func (s *MenuService) BuildMenuTree(allMenus []model.SysMenu) []dto.MenuResult {
-
 	menuMap := make(map[string]*dto.MenuResult)
 
+	// 1. 初始化 Map
 	for _, menu := range allMenus {
 		menuMap[menu.ID] = &dto.MenuResult{
 			ID:          menu.ID,
@@ -167,25 +180,29 @@ func (s *MenuService) BuildMenuTree(allMenus []model.SysMenu) []dto.MenuResult {
 			Description: menu.Description,
 			CreatedAt:   menu.CreatedAt,
 			UpdatedAt:   menu.UpdatedAt,
-			Children:    []*dto.MenuResult{}, // 初始化 Children
+			Children:    []*dto.MenuResult{},
 		}
 	}
 
 	var tree []dto.MenuResult
 
+	// 2. 建立层级关系
 	for _, menu := range allMenus {
-		// 从 Map 中获取当前节点的 DTO 指针
 		currentNode := menuMap[menu.ID]
-
-		// 判断是否为根节点（根据你的逻辑，ParentID 为 "0" 或空 是根节点）
 		if menu.ParentID == "0" || menu.ParentID == "" {
-			tree = append(tree, *currentNode)
+			// 延迟到下一步处理根节点，或者这里直接加指针（如果 tree 是 []*dto.MenuResult）
+			// 但因为 tree 是 []dto.MenuResult，我们应该在所有关系建立后再收集根节点
 		} else {
-			// 如果不是根节点，尝试找到它的父节点
 			if parentNode, ok := menuMap[menu.ParentID]; ok {
-				// 将当前节点添加到父节点的 Children 中
 				parentNode.Children = append(parentNode.Children, currentNode)
 			}
+		}
+	}
+
+	// 3. 收集根节点
+	for _, menu := range allMenus {
+		if menu.ParentID == "0" || menu.ParentID == "" {
+			tree = append(tree, *menuMap[menu.ID])
 		}
 	}
 

@@ -33,10 +33,11 @@ func (s *RoleService) CreateRole(req *dto.CreateRoleReq) error {
 }
 
 func (s *RoleService) UpdateRole(req *dto.UpdateRoleReq) error {
-	return s.app.DB.Model(&model.SysRole{}).Where("id = ?", req.ID).Updates(model.SysRole{
-		RoleName: req.RoleName,
-		RoleCode: req.RoleCode,
-		Status:   req.Status,
+	return s.app.DB.Model(&model.SysRole{}).Where("id = ?", req.ID).Updates(map[string]interface{}{
+		"role_name":   req.RoleName,
+		"role_code":   req.RoleCode,
+		"status":      req.Status,
+		"description": req.Description,
 	}).Error
 }
 

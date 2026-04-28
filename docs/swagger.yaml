@@ -1,5 +1,206 @@
 basePath: /api/v1
 definitions:
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingCreateReq:
+    properties:
+      building_name:
+        description: 楼栋名称
+        maxLength: 100
+        type: string
+      building_no:
+        description: 楼栋编号
+        maxLength: 50
+        type: string
+      campus_id:
+        description: 校区ID
+        type: string
+      floor_count:
+        description: 楼层数
+        minimum: 1
+        type: integer
+      remark:
+        description: 备注
+        maxLength: 500
+        type: string
+      room_count:
+        description: 房间数
+        minimum: 0
+        type: integer
+    required:
+    - building_name
+    - building_no
+    - campus_id
+    - floor_count
+    - room_count
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingListPageReq:
+    properties:
+      building_name:
+        description: 楼栋名称
+        type: string
+      building_no:
+        description: 楼栋编号
+        type: string
+      campus_id:
+        description: 校区ID
+        type: string
+      currentPage:
+        description: 当前页
+        type: integer
+      pageSize:
+        description: 每页条数
+        type: integer
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingResult:
+    properties:
+      building_name:
+        type: string
+      building_no:
+        type: string
+      campus_id:
+        type: string
+      campus_name:
+        description: 校区名称
+        type: string
+      created_at:
+        type: string
+      floor_count:
+        type: integer
+      id:
+        type: string
+      remark:
+        type: string
+      room_count:
+        type: integer
+      room_used_count:
+        description: 已分配房间数
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingUpdateReq:
+    properties:
+      building_name:
+        description: 楼栋名称
+        maxLength: 100
+        type: string
+      building_no:
+        description: 楼栋编号
+        maxLength: 50
+        type: string
+      campus_id:
+        description: 校区ID
+        type: string
+      floor_count:
+        description: 楼层数
+        minimum: 1
+        type: integer
+      id:
+        description: 楼栋ID
+        type: string
+      remark:
+        description: 备注
+        maxLength: 500
+        type: string
+      room_count:
+        description: 房间数
+        minimum: 0
+        type: integer
+    required:
+    - building_name
+    - building_no
+    - campus_id
+    - floor_count
+    - id
+    - room_count
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusCreateReq:
+    properties:
+      address:
+        description: 校区地址
+        maxLength: 200
+        type: string
+      campus_name:
+        description: 校区名称
+        maxLength: 100
+        type: string
+      contact:
+        description: 联系方式
+        maxLength: 20
+        type: string
+      phone:
+        description: 联系电话
+        maxLength: 20
+        type: string
+      remark:
+        description: 备注
+        maxLength: 500
+        type: string
+    required:
+    - campus_name
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusListPageReq:
+    properties:
+      campus_name:
+        description: 校区名称
+        type: string
+      currentPage:
+        description: 当前页
+        type: integer
+      pageSize:
+        description: 每页条数
+        type: integer
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusResult:
+    properties:
+      address:
+        type: string
+      building_count:
+        description: 楼栋数量
+        type: integer
+      campus_name:
+        type: string
+      contact:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      phone:
+        type: string
+      remark:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusUpdateReq:
+    properties:
+      address:
+        description: 校区地址
+        maxLength: 200
+        type: string
+      campus_name:
+        description: 校区名称
+        maxLength: 100
+        type: string
+      contact:
+        description: 联系方式
+        maxLength: 20
+        type: string
+      id:
+        description: 校区ID
+        type: string
+      phone:
+        description: 联系电话
+        maxLength: 20
+        type: string
+      remark:
+        description: 备注
+        maxLength: 500
+        type: string
+    required:
+    - campus_name
+    - id
+    type: object
   github_com_Struggle-Rabbit_CampusLogistics_api_dto.CreateMenuReq:
     properties:
       component:
@@ -31,6 +232,7 @@ definitions:
         type: integer
     required:
     - name
+    - parent_id
     - perms
     - status
     - type
@@ -39,8 +241,6 @@ definitions:
     properties:
       description:
         type: string
-      is_built_in:
-        type: integer
       role_code:
         type: string
       role_name:
@@ -51,6 +251,237 @@ definitions:
     - role_code
     - role_name
     - status
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormAssignReq:
+    properties:
+      room_id:
+        description: 宿舍ID
+        type: string
+      user_id:
+        description: 用户ID
+        type: string
+    required:
+    - room_id
+    - user_id
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormCheckOutReq:
+    properties:
+      room_id:
+        description: 宿舍ID
+        type: string
+      user_id:
+        description: 用户ID
+        type: string
+    required:
+    - room_id
+    - user_id
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormCreateReq:
+    properties:
+      building_id:
+        description: 楼栋ID
+        type: string
+      floor:
+        description: 楼层
+        type: integer
+      max_count:
+        description: 最大入住人数
+        minimum: 1
+        type: integer
+      remark:
+        description: 备注
+        maxLength: 500
+        type: string
+      room_no:
+        description: 宿舍编号
+        maxLength: 50
+        type: string
+      room_type:
+        description: 宿舍类型：1-4人间 2-6人间 3-8人间 4-其他
+        enum:
+        - 1
+        - 2
+        - 3
+        - 4
+        type: integer
+    required:
+    - building_id
+    - floor
+    - max_count
+    - room_no
+    - room_type
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormListPageReq:
+    properties:
+      building_id:
+        description: 楼栋ID
+        type: string
+      campus_id:
+        description: 校区ID
+        type: string
+      currentPage:
+        description: 当前页
+        type: integer
+      floor:
+        description: 楼层
+        type: integer
+      pageSize:
+        description: 每页条数
+        type: integer
+      room_type:
+        description: 宿舍类型
+        type: integer
+      status:
+        description: 状态：1-可入住 2-已满 3-装修中
+        type: integer
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormResult:
+    properties:
+      available_bed:
+        description: 剩余床位
+        type: integer
+      building_id:
+        type: string
+      building_name:
+        description: 楼栋名称
+        type: string
+      campus_id:
+        type: string
+      campus_name:
+        description: 校区名称
+        type: string
+      created_at:
+        type: string
+      current_count:
+        type: integer
+      fill_rate:
+        description: 入住率
+        type: number
+      floor:
+        type: integer
+      id:
+        type: string
+      max_count:
+        type: integer
+      remark:
+        type: string
+      room_no:
+        type: string
+      room_type:
+        description: 宿舍类型：1-4人间 2-6人间 3-8人间 4-其他
+        type: integer
+      room_type_name:
+        type: string
+      status:
+        description: 状态：1-可入住 2-已满 3-装修中
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormTransferReq:
+    properties:
+      room_id:
+        description: 当前宿舍ID
+        type: string
+      target_room_id:
+        description: 目标宿舍ID
+        type: string
+      user_id:
+        description: 用户ID
+        type: string
+    required:
+    - room_id
+    - target_room_id
+    - user_id
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormUpdateReq:
+    properties:
+      building_id:
+        description: 楼栋ID
+        type: string
+      floor:
+        description: 楼层
+        type: integer
+      id:
+        description: 宿舍ID
+        type: string
+      max_count:
+        description: 最大入住人数
+        minimum: 1
+        type: integer
+      remark:
+        description: 备注
+        maxLength: 500
+        type: string
+      room_no:
+        description: 宿舍编号
+        maxLength: 50
+        type: string
+      room_type:
+        description: 宿舍类型：1-4人间 2-6人间 3-8人间 4-其他
+        enum:
+        - 1
+        - 2
+        - 3
+        - 4
+        type: integer
+    required:
+    - building_id
+    - floor
+    - id
+    - max_count
+    - room_no
+    - room_type
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormUserListReq:
+    properties:
+      currentPage:
+        description: 当前页
+        type: integer
+      pageSize:
+        description: 每页条数
+        type: integer
+      room_id:
+        description: 宿舍ID
+        type: string
+      status:
+        description: 状态：1-在住 2-已迁出
+        type: integer
+      user_id:
+        description: 用户学号/工号
+        type: string
+      user_name:
+        description: 用户姓名
+        type: string
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormUserResult:
+    properties:
+      building_name:
+        description: 楼栋名称
+        type: string
+      campus_name:
+        description: 校区名称
+        type: string
+      check_in_time:
+        type: string
+      check_out_time:
+        type: string
+      id:
+        type: string
+      room_id:
+        type: string
+      room_no:
+        description: 宿舍编号
+        type: string
+      status:
+        description: 状态：1-在住 2-已迁出
+        type: integer
+      user_id:
+        type: string
+      user_name:
+        type: string
+      user_type:
+        type: string
     type: object
   github_com_Struggle-Rabbit_CampusLogistics_api_dto.LoginReq:
     properties:
@@ -63,6 +494,207 @@ definitions:
     required:
     - account
     - password
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeCreateReq:
+    properties:
+      attachments:
+        description: 附件URL列表
+        items:
+          type: string
+        type: array
+      content:
+        description: 公告内容
+        type: string
+      is_top:
+        description: 是否置顶：1-是 2-否
+        enum:
+        - 1
+        - 2
+        type: integer
+      notice_type:
+        description: 公告类型：1-后勤通知 2-校园通知 3-紧急通知
+        enum:
+        - 1
+        - 2
+        - 3
+        type: integer
+      publish_time:
+        description: 发布时间
+        type: string
+      title:
+        description: 公告标题
+        maxLength: 200
+        type: string
+    required:
+    - content
+    - notice_type
+    - publish_time
+    - title
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeListPageReq:
+    properties:
+      currentPage:
+        description: 当前页
+        type: integer
+      end_time:
+        description: 结束时间
+        type: string
+      is_top:
+        description: 是否置顶
+        type: integer
+      notice_type:
+        description: 公告类型
+        type: integer
+      pageSize:
+        description: 每页条数
+        type: integer
+      start_time:
+        description: 开始时间
+        type: string
+      title:
+        description: 公告标题
+        type: string
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticePublicResult:
+    properties:
+      attachments:
+        items:
+          type: string
+        type: array
+      content:
+        type: string
+      id:
+        type: string
+      notice_type:
+        type: integer
+      notice_type_name:
+        type: string
+      publish_time:
+        type: string
+      title:
+        type: string
+      view_count:
+        type: integer
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeResult:
+    properties:
+      attachments:
+        items:
+          type: string
+        type: array
+      content:
+        type: string
+      created_at:
+        type: string
+      creator_id:
+        type: string
+      creator_name:
+        type: string
+      id:
+        type: string
+      is_top:
+        type: integer
+      is_top_name:
+        type: string
+      notice_type:
+        type: integer
+      notice_type_name:
+        type: string
+      publish_time:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      view_count:
+        type: integer
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeTopReq:
+    properties:
+      id:
+        type: string
+      is_top:
+        enum:
+        - 1
+        - 2
+        type: integer
+    required:
+    - id
+    - is_top
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeUpdateReq:
+    properties:
+      attachments:
+        description: 附件URL列表
+        items:
+          type: string
+        type: array
+      content:
+        description: 公告内容
+        type: string
+      id:
+        description: 公告ID
+        type: string
+      is_top:
+        description: 是否置顶：1-是 2-否
+        enum:
+        - 1
+        - 2
+        type: integer
+      notice_type:
+        description: 公告类型：1-后勤通知 2-校园通知 3-紧急通知
+        enum:
+        - 1
+        - 2
+        - 3
+        type: integer
+      publish_time:
+        description: 发布时间
+        type: string
+      title:
+        description: 公告标题
+        maxLength: 200
+        type: string
+    required:
+    - content
+    - id
+    - notice_type
+    - title
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult:
+    properties:
+      currentPage:
+        description: 当前页
+        type: integer
+      list:
+        description: 数据列表
+      pageSize:
+        description: 每页条数
+        type: integer
+      total:
+        description: 总条数
+        type: integer
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.PasswordReset:
+    properties:
+      mobile:
+        type: string
+      new_password:
+        type: string
+      old_password:
+        type: string
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.RecordReq:
+    properties:
+      id:
+        type: string
+      remark:
+        type: string
+      status:
+        type: integer
+    required:
+    - id
+    - status
     type: object
   github_com_Struggle-Rabbit_CampusLogistics_api_dto.RegisterReq:
     properties:
@@ -89,6 +721,99 @@ definitions:
     - name
     - password
     - userType
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.RepairOrderResult:
+    properties:
+      address:
+        description: 报修地点
+        type: string
+      contact:
+        description: 联系人
+        type: string
+      created_at:
+        type: string
+      description:
+        description: 问题描述
+        type: string
+      handler_id:
+        description: 处理人学号/工号（指针类型允许为空）
+        type: string
+      id:
+        type: string
+      images:
+        description: 图片URL列表（JSON序列化）
+        items:
+          type: string
+        type: array
+      order_no:
+        description: 报修单号（唯一）
+        type: string
+      phone:
+        description: 联系电话
+        type: string
+      records:
+        description: 流转记录
+        items:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.RepairRecordResult'
+        type: array
+      repair_type:
+        description: 报修类型：1-水电 2-家具 3-网络 4-其他
+        type: integer
+      status:
+        description: 状态：1-待分配 2-待处理 3-处理中 4-已完成 5-已驳回 6-已撤销
+        type: integer
+      updated_at:
+        type: string
+      user_id:
+        description: 提交人学号/工号
+        type: string
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.RepairOrderSubmitReq:
+    properties:
+      address:
+        description: 报修地点
+        type: string
+      contact:
+        description: 联系人
+        type: string
+      description:
+        description: 问题描述
+        type: string
+      images:
+        description: 图片URL列表（JSON序列化）
+        items:
+          type: string
+        type: array
+      phone:
+        description: 联系电话
+        type: string
+      repair_type:
+        description: 报修类型：1-水电 2-家具 3-网络 4-其他
+        type: integer
+    required:
+    - address
+    - contact
+    - description
+    - images
+    - phone
+    - repair_type
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.RepairRecordResult:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      new_status:
+        type: integer
+      old_status:
+        type: integer
+      operator_id:
+        type: string
+      order_id:
+        type: string
+      remark:
+        type: string
     type: object
   github_com_Struggle-Rabbit_CampusLogistics_api_dto.UpdateMenuReq:
     properties:
@@ -124,14 +849,45 @@ definitions:
     required:
     - id
     type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.UpdateRepairOrderSubmitReq:
+    properties:
+      address:
+        description: 报修地点
+        type: string
+      contact:
+        description: 联系人
+        type: string
+      description:
+        description: 问题描述
+        type: string
+      handler_id:
+        type: string
+      id:
+        type: string
+      images:
+        description: 图片URL列表（JSON序列化）
+        items:
+          type: string
+        type: array
+      order_no:
+        type: string
+      phone:
+        description: 联系电话
+        type: string
+      repair_type:
+        description: 报修类型：1-水电 2-家具 3-网络 4-其他
+        type: integer
+      status:
+        type: integer
+    required:
+    - id
+    type: object
   github_com_Struggle-Rabbit_CampusLogistics_api_dto.UpdateRoleReq:
     properties:
       description:
         type: string
       id:
         type: string
-      is_built_in:
-        type: integer
       role_code:
         type: string
       role_name:
@@ -157,12 +913,183 @@ definitions:
       status:
         description: 状态：1-启用 2-禁用
         type: integer
-      user_code:
-        description: 学号/工号（唯一）
-        type: string
       user_type:
         description: '用户类型: 00-管理员  01-职工  02-学生'
         type: string
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityBatchPayReq:
+    properties:
+      ids:
+        description: 记录ID列表
+        items:
+          type: string
+        type: array
+    required:
+    - ids
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityCreateReq:
+    properties:
+      electric_usage:
+        description: 用电量（度）
+        minimum: 0
+        type: number
+      month:
+        description: 月份
+        maximum: 12
+        minimum: 1
+        type: integer
+      room_id:
+        description: 宿舍ID
+        type: string
+      water_usage:
+        description: 用水量（吨）
+        minimum: 0
+        type: number
+      year:
+        description: 年份
+        maximum: 2100
+        minimum: 2020
+        type: integer
+    required:
+    - month
+    - room_id
+    - year
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityListPageReq:
+    properties:
+      building_id:
+        description: 楼栋ID
+        type: string
+      campus_id:
+        description: 校区ID
+        type: string
+      currentPage:
+        description: 当前页
+        type: integer
+      month:
+        description: 月份
+        type: integer
+      pageSize:
+        description: 每页条数
+        type: integer
+      pay_status:
+        description: 缴费状态：1-未缴费 2-已缴费
+        type: integer
+      room_id:
+        description: 宿舍ID
+        type: string
+      year:
+        description: 年份
+        type: integer
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityPayReq:
+    properties:
+      id:
+        description: 记录ID
+        type: string
+    required:
+    - id
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityPriceReq:
+    properties:
+      electric_price:
+        description: 电价（元/度）
+        minimum: 0
+        type: number
+      water_price:
+        description: 水价（元/吨）
+        minimum: 0
+        type: number
+    required:
+    - electric_price
+    - water_price
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityPriceResult:
+    properties:
+      electric_price:
+        type: number
+      water_price:
+        type: number
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityResult:
+    properties:
+      amount:
+        type: number
+      building_id:
+        type: string
+      building_name:
+        description: 楼栋名称
+        type: string
+      campus_id:
+        type: string
+      campus_name:
+        description: 校区名称
+        type: string
+      created_at:
+        type: string
+      electric_amount:
+        description: 电费
+        type: number
+      electric_price:
+        description: 电价
+        type: number
+      electric_usage:
+        type: number
+      id:
+        type: string
+      month:
+        type: integer
+      pay_status:
+        description: 缴费状态：1-未缴费 2-已缴费
+        type: integer
+      pay_status_name:
+        type: string
+      room_id:
+        type: string
+      room_no:
+        description: 宿舍编号
+        type: string
+      updated_at:
+        type: string
+      water_amount:
+        description: 水费
+        type: number
+      water_price:
+        description: 水价
+        type: number
+      water_usage:
+        type: number
+      year:
+        type: integer
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityStatResult:
+    properties:
+      total_amount:
+        type: number
+      total_electric_usage:
+        type: number
+      total_water_usage:
+        type: number
+      unpaid_amount:
+        type: number
+      unpaid_count:
+        type: integer
+    type: object
+  github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityUpdateReq:
+    properties:
+      electric_usage:
+        description: 用电量（度）
+        minimum: 0
+        type: number
+      id:
+        description: 记录ID
+        type: string
+      water_usage:
+        description: 用水量（吨）
+        minimum: 0
+        type: number
+    required:
+    - id
     type: object
   github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse:
     properties:
@@ -214,7 +1141,10 @@ paths:
         name: ip
         type: string
       - in: query
-        name: operation_at
+        name: operation_time_end
+        type: string
+      - in: query
+        name: operation_time_start
         type: string
       - description: 每页条数
         in: query
@@ -222,9 +1152,6 @@ paths:
         type: integer
       - in: query
         name: user_id
-        type: string
-      - in: query
-        name: user_name
         type: string
       produces:
       - application/json
@@ -240,6 +1167,875 @@ paths:
       summary: 操作日志分页查询接口
       tags:
       - 系统模块
+  /api/v1/RefreshToken:
+    get:
+      consumes:
+      - application/json
+      description: 前端使用refresh_token请求
+      parameters:
+      - description: 入参
+        in: query
+        name: refresh_token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: token刷新
+      tags:
+      - 系统模块
+  /api/v1/building/byCampus:
+    get:
+      consumes:
+      - application/json
+      description: 根据校区ID获取该校区下的所有楼栋信息，用于下拉框选择
+      parameters:
+      - description: 校区ID
+        in: query
+        name: campus_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingResult'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 获取校区下楼栋列表接口
+      tags:
+      - 楼栋管理
+  /api/v1/building/create:
+    post:
+      consumes:
+      - application/json
+      description: 创建新的楼栋信息，包含楼栋编号、名称、楼层数、房间数等，编号唯一性自动校验
+      parameters:
+      - description: 楼栋创建请求参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingCreateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 创建楼栋接口
+      tags:
+      - 楼栋管理
+  /api/v1/building/del:
+    post:
+      consumes:
+      - application/json
+      description: 根据楼栋ID列表删除楼栋信息，删除前会检查是否有关联的宿舍
+      parameters:
+      - description: 删除参数，ids为楼栋ID数组
+        in: body
+        name: data
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 删除楼栋接口
+      tags:
+      - 楼栋管理
+  /api/v1/building/detail:
+    get:
+      consumes:
+      - application/json
+      description: 根据楼栋ID获取楼栋的详细信息，包含所属校区名称和已分配房间数
+      parameters:
+      - description: 楼栋ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 获取楼栋详情接口
+      tags:
+      - 楼栋管理
+  /api/v1/building/export:
+    get:
+      consumes:
+      - application/json
+      description: 导出楼栋信息为CSV文件，支持按校区和楼栋编号筛选
+      parameters:
+      - in: query
+        name: building_no
+        type: string
+      - in: query
+        name: campus_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: CSV文件
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 批量导出楼栋接口
+      tags:
+      - 楼栋管理
+  /api/v1/building/import:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 通过CSV文件批量导入楼栋信息，文件格式：校区名称,楼栋编号,楼栋名称,楼层数,房间数,备注
+      parameters:
+      - description: CSV文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 批量导入楼栋接口
+      tags:
+      - 楼栋管理
+  /api/v1/building/list:
+    get:
+      consumes:
+      - application/json
+      description: 分页查询楼栋信息列表，支持按校区ID、楼栋编号、楼栋名称筛选
+      parameters:
+      - description: 查询参数
+        in: body
+        name: data
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingListPageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingResult'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 分页查询楼栋列表接口
+      tags:
+      - 楼栋管理
+  /api/v1/building/update:
+    post:
+      consumes:
+      - application/json
+      description: 根据楼栋ID更新楼栋信息，包括楼栋编号、名称、楼层数、房间数等
+      parameters:
+      - description: 楼栋更新请求参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.BuildingUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 更新楼栋接口
+      tags:
+      - 楼栋管理
+  /api/v1/campus/all:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有校区的简要信息列表，用于下拉框选择等场景
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusResult'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 获取所有校区接口
+      tags:
+      - 校区管理
+  /api/v1/campus/create:
+    post:
+      consumes:
+      - application/json
+      description: 创建新的校区信息，包含校区名称、地址、联系方式等基础信息
+      parameters:
+      - description: 校区创建请求参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusCreateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 创建校区接口
+      tags:
+      - 校区管理
+  /api/v1/campus/del:
+    post:
+      consumes:
+      - application/json
+      description: 根据校区ID列表删除校区信息，删除前会检查是否有关联的楼栋
+      parameters:
+      - description: 删除参数，ids为校区ID数组
+        in: body
+        name: data
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 删除校区接口
+      tags:
+      - 校区管理
+  /api/v1/campus/detail:
+    get:
+      consumes:
+      - application/json
+      description: 根据校区ID获取校区的详细信息，包含楼栋数量统计
+      parameters:
+      - description: 校区ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 获取校区详情接口
+      tags:
+      - 校区管理
+  /api/v1/campus/list:
+    get:
+      consumes:
+      - application/json
+      description: 分页查询校区信息列表，支持按校区名称模糊搜索
+      parameters:
+      - description: 查询参数，page和page_size必填
+        in: body
+        name: data
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusListPageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusResult'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 分页查询校区列表接口
+      tags:
+      - 校区管理
+  /api/v1/campus/update:
+    post:
+      consumes:
+      - application/json
+      description: 根据校区ID更新校区信息，包括校区名称、地址、联系方式等
+      parameters:
+      - description: 校区更新请求参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.CampusUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 更新校区接口
+      tags:
+      - 校区管理
+  /api/v1/dorm/assign:
+    post:
+      consumes:
+      - application/json
+      description: 为学生分配宿舍，会检查床位是否已满、用户是否已在其他宿舍入住
+      parameters:
+      - description: 分配参数，room_id为宿舍ID，user_id为用户ID
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormAssignReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 分配宿舍接口
+      tags:
+      - 宿舍管理
+  /api/v1/dorm/checkout:
+    post:
+      consumes:
+      - application/json
+      description: 办理学生退宿手续，自动释放床位
+      parameters:
+      - description: 退宿参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormCheckOutReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 退宿接口
+      tags:
+      - 宿舍管理
+  /api/v1/dorm/create:
+    post:
+      consumes:
+      - application/json
+      description: 创建新的宿舍信息，包含宿舍编号、所属楼栋、楼层、房间类型、床位数等
+      parameters:
+      - description: 宿舍创建请求参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormCreateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 创建宿舍接口
+      tags:
+      - 宿舍管理
+  /api/v1/dorm/del:
+    post:
+      consumes:
+      - application/json
+      description: 根据宿舍ID列表删除宿舍信息，删除前会检查是否有学生入住
+      parameters:
+      - description: 删除参数，ids为宿舍ID数组
+        in: body
+        name: data
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 删除宿舍接口
+      tags:
+      - 宿舍管理
+  /api/v1/dorm/detail:
+    get:
+      consumes:
+      - application/json
+      description: 根据宿舍ID获取宿舍的详细信息，包含楼栋名称、校区名称、床位使用情况
+      parameters:
+      - description: 宿舍ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 获取宿舍详情接口
+      tags:
+      - 宿舍管理
+  /api/v1/dorm/list:
+    get:
+      consumes:
+      - application/json
+      description: 分页查询宿舍信息列表，支持按楼栋、校区、楼层、宿舍类型、状态筛选
+      parameters:
+      - description: 查询参数
+        in: body
+        name: data
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormListPageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormResult'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 分页查询宿舍列表接口
+      tags:
+      - 宿舍管理
+  /api/v1/dorm/transfer:
+    post:
+      consumes:
+      - application/json
+      description: 将学生从当前宿舍调整到目标宿舍，会检查目标宿舍是否有空床位
+      parameters:
+      - description: 调宿参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormTransferReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 调宿接口
+      tags:
+      - 宿舍管理
+  /api/v1/dorm/update:
+    post:
+      consumes:
+      - application/json
+      description: 根据宿舍ID更新宿舍信息，包括宿舍编号、楼层、房间类型、床位数等
+      parameters:
+      - description: 宿舍更新请求参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 更新宿舍接口
+      tags:
+      - 宿舍管理
+  /api/v1/dorm/users:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定宿舍的所有在住/历史入住人员列表
+      parameters:
+      - description: 查询参数
+        in: body
+        name: data
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormUserListReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormUserResult'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 获取宿舍人员列表接口
+      tags:
+      - 宿舍管理
+  /api/v1/dorm/warning:
+    get:
+      consumes:
+      - application/json
+      description: 获取入住率达到80%及以上的宿舍列表，用于预警提醒
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.DormResult'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 获取宿舍容量预警接口
+      tags:
+      - 宿舍管理
   /api/v1/login:
     post:
       consumes:
@@ -413,6 +2209,263 @@ paths:
       summary: 菜单更新接口
       tags:
       - 系统模块
+  /api/v1/notice/create:
+    post:
+      consumes:
+      - application/json
+      description: 创建新的公告信息，支持定时发布，置顶公告最多3条
+      parameters:
+      - description: 公告创建请求参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeCreateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 创建公告接口
+      tags:
+      - 公告管理
+  /api/v1/notice/del:
+    post:
+      consumes:
+      - application/json
+      description: 根据公告ID列表删除公告信息
+      parameters:
+      - description: 删除参数，ids为公告ID数组
+        in: body
+        name: data
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 删除公告接口
+      tags:
+      - 公告管理
+  /api/v1/notice/detail:
+    get:
+      consumes:
+      - application/json
+      description: 根据公告ID获取公告的详细信息，自动增加浏览量
+      parameters:
+      - description: 公告ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 获取公告详情接口
+      tags:
+      - 公告管理
+  /api/v1/notice/list:
+    get:
+      consumes:
+      - application/json
+      description: 分页查询公告信息列表，支持按标题、类型、置顶状态、时间范围筛选（管理员接口）
+      parameters:
+      - description: 查询参数
+        in: body
+        name: data
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeListPageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeResult'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 分页查询公告列表接口
+      tags:
+      - 公告管理
+  /api/v1/notice/public:
+    get:
+      consumes:
+      - application/json
+      description: 获取已发布的公告列表（公开接口，无需登录），仅返回发布时间早于当前时间的公告
+      parameters:
+      - description: 查询参数
+        in: body
+        name: data
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeListPageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticePublicResult'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 获取公开公告列表接口
+      tags:
+      - 公告管理
+  /api/v1/notice/top:
+    post:
+      consumes:
+      - application/json
+      description: 设置或取消公告的置顶状态，置顶公告最多3条
+      parameters:
+      - description: 置顶参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeTopReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 设置公告置顶接口
+      tags:
+      - 公告管理
+  /api/v1/notice/update:
+    post:
+      consumes:
+      - application/json
+      description: 根据公告ID更新公告信息，支持修改发布时间和置顶状态
+      parameters:
+      - description: 公告更新请求参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.NoticeUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 更新公告接口
+      tags:
+      - 公告管理
   /api/v1/register:
     post:
       consumes:
@@ -439,6 +2492,208 @@ paths:
       summary: 用户注册接口
       tags:
       - 用户管理
+  /api/v1/repair/del:
+    post:
+      consumes:
+      - application/json
+      description: 软删除报修单及关联记录
+      parameters:
+      - description: 报修单ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 删除报修单
+      tags:
+      - 报修管理
+  /api/v1/repair/detail:
+    get:
+      consumes:
+      - application/json
+      description: 根据ID查询详情，包含流转记录
+      parameters:
+      - description: 报修单ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.RepairOrderResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 查询报修单详情
+      tags:
+      - 报修管理
+  /api/v1/repair/list:
+    get:
+      consumes:
+      - application/json
+      description: 支持按单号、类型、状态、时间范围等条件筛选
+      parameters:
+      - description: 联系人
+        in: query
+        name: contact
+        type: string
+      - description: 当前页
+        in: query
+        name: currentPage
+        type: integer
+      - description: 结束时间 (2006-01-02 15:04:05)
+        in: query
+        name: end_time
+        type: string
+      - in: query
+        name: handler_id
+        type: string
+      - in: query
+        name: order_no
+        type: string
+      - description: 每页条数
+        in: query
+        name: pageSize
+        type: integer
+      - description: 联系电话
+        in: query
+        name: phone
+        type: string
+      - description: 报修类型：1-水电 2-家具 3-网络 4-其他
+        in: query
+        name: repair_type
+        type: integer
+      - description: 开始时间 (2006-01-02 15:04:05)
+        in: query
+        name: start_time
+        type: string
+      - in: query
+        name: status
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.RepairOrderResult'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 分页查询报修单
+      tags:
+      - 报修管理
+  /api/v1/repair/record:
+    post:
+      consumes:
+      - application/json
+      description: 记录处理过程并更新状态
+      parameters:
+      - description: 流转信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.RecordReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 报修单状态流转
+      tags:
+      - 报修管理
+  /api/v1/repair/submit:
+    post:
+      consumes:
+      - application/json
+      description: 学生或教职工提交报修申请
+      parameters:
+      - description: 报修信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.RepairOrderSubmitReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 提交报修单
+      tags:
+      - 报修管理
+  /api/v1/repair/update:
+    post:
+      consumes:
+      - application/json
+      description: 仅限待分配状态编辑
+      parameters:
+      - description: 更新信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UpdateRepairOrderSubmitReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 更新报修单信息
+      tags:
+      - 报修管理
   /api/v1/role/add:
     post:
       consumes:
@@ -746,6 +3001,460 @@ paths:
       summary: 用户更新接口
       tags:
       - 用户管理
+  /api/v1/user/resetPassword:
+    post:
+      consumes:
+      - application/json
+      description: 重置密码
+      parameters:
+      - description: 入参
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PasswordReset'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 重置密码接口
+      tags:
+      - 用户管理
+  /api/v1/utility/batchPay:
+    post:
+      consumes:
+      - application/json
+      description: 批量为多个水电费记录进行缴费操作
+      parameters:
+      - description: 批量缴费参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityBatchPayReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 批量缴费接口
+      tags:
+      - 水电费管理
+  /api/v1/utility/create:
+    post:
+      consumes:
+      - application/json
+      description: 录入宿舍水电费用量数据，自动计算费用，同一宿舍同月份记录不能重复
+      parameters:
+      - description: 水电费记录创建请求参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityCreateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 创建水电费记录接口
+      tags:
+      - 水电费管理
+  /api/v1/utility/del:
+    post:
+      consumes:
+      - application/json
+      description: 删除水电费记录，已缴费记录不允许删除
+      parameters:
+      - description: 删除参数，ids为记录ID数组
+        in: body
+        name: data
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 删除水电费记录接口
+      tags:
+      - 水电费管理
+  /api/v1/utility/detail:
+    get:
+      consumes:
+      - application/json
+      description: 根据记录ID获取水电费的详细信息，包含用量、单价、费用明细
+      parameters:
+      - description: 记录ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 获取水电费详情接口
+      tags:
+      - 水电费管理
+  /api/v1/utility/list:
+    get:
+      consumes:
+      - application/json
+      description: 分页查询水电费记录列表，支持按宿舍、校区、楼栋、年月、缴费状态筛选
+      parameters:
+      - description: 查询参数
+        in: body
+        name: data
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityListPageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityResult'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 分页查询水电费记录接口
+      tags:
+      - 水电费管理
+  /api/v1/utility/myUtility:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前登录用户所在宿舍的水电费记录（需登录认证）
+      parameters:
+      - description: 年份
+        in: query
+        name: year
+        type: integer
+      - description: 月份
+        in: query
+        name: month
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.PageResult'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityResult'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 获取用户水电费接口
+      tags:
+      - 水电费管理
+  /api/v1/utility/pay:
+    post:
+      consumes:
+      - application/json
+      description: 为指定水电费记录进行缴费操作
+      parameters:
+      - description: 缴费参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityPayReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 缴费接口
+      tags:
+      - 水电费管理
+  /api/v1/utility/price:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前的水费和电费单价配置
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityPriceResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 获取水电单价接口
+      tags:
+      - 水电费管理
+    post:
+      consumes:
+      - application/json
+      description: 更新水费和电费的单价配置
+      parameters:
+      - description: 单价配置参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityPriceReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 更新水电单价接口
+      tags:
+      - 水电费管理
+  /api/v1/utility/statistics:
+    get:
+      consumes:
+      - application/json
+      description: 按校区和月份统计水电费使用量和费用情况
+      parameters:
+      - description: 校区ID
+        in: query
+        name: campus_id
+        type: string
+      - description: 年份
+        in: query
+        name: year
+        type: integer
+      - description: 月份
+        in: query
+        name: month
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityStatResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 获取水电费统计接口
+      tags:
+      - 水电费管理
+  /api/v1/utility/update:
+    post:
+      consumes:
+      - application/json
+      description: 更新宿舍水电费用量数据，已缴费记录不允许修改
+      parameters:
+      - description: 水电费记录更新请求参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 更新水电费记录接口
+      tags:
+      - 水电费管理
+  /api/v1/utility/warning:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前欠费的水电费记录列表，用于催缴提醒
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_api_dto.UtilityResult'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Struggle-Rabbit_CampusLogistics_pkg_utils.ErrResponse'
+      summary: 获取欠费预警接口
+      tags:
+      - 水电费管理
 securityDefinitions:
   ApiKeyAuth:
     description: Type "Bearer" followed by a space and JWT token.

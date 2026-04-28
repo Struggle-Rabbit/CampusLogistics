@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"time"
 
@@ -15,30 +16,40 @@ import (
 func OperationLogMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 1. 先获取请求信息（在 c.Next() 之前）
-		startTime := time.Now()
 		method := c.Request.Method
 		path := c.Request.URL.Path
 		ip := c.ClientIP()
 		userAgent := c.Request.UserAgent()
 
-		// 2. 读取请求参数（GET/POST）
+		// 2. 读取请求参数并脱敏
 		params := getRequestParams(c)
+		params = filterSensitiveData(params)
 
 		// 3. 执行后续的接口逻辑
 		c.Next()
 
 		// 4. 接口执行完后，获取响应信息
 		statusCode := c.Writer.Status()
-		operationAt := startTime
+		operationAt := time.Now() // 使用请求结束时间
 
-		// 5. 从 Context 中获取当前登录用户信息（你登录时存进去的）
-		userID, _ := c.Get("user_id")
-		userName, _ := c.Get("user_name")
+		// 5. 从 Context 中获取当前登录用户信息
+		userID, _ := c.Get("userID")
+		userName, _ := c.Get("userName")
+
+		// 如果没有登录，则记录为系统或游客
+		uidStr := ""
+		unameStr := "Guest"
+		if userID != nil {
+			uidStr = userID.(string)
+		}
+		if userName != nil {
+			unameStr = userName.(string)
+		}
 
 		// 6. 组装日志对象
 		log := model.SysOperationLog{
-			UserID:      userID.(string),
-			UserName:    userName.(string),
+			UserID:      uidStr,
+			UserName:    unameStr,
 			Method:      method,
 			Path:        path,
 			Params:      params,
@@ -48,14 +59,35 @@ func OperationLogMiddleware() gin.HandlerFunc {
 			OperationAt: operationAt,
 		}
 
-		// 7. 异步写入数据库（关键！不阻塞接口响应）
+		// 7. 异步写入数据库
 		go func() {
 			if err := dao.DB.Create(&log).Error; err != nil {
-				// 记录日志失败，只打印不影响接口
 				logger.Error("操作日志写入失败: " + err.Error())
 			}
 		}()
 	}
+}
+
+// filterSensitiveData 过滤敏感数据
+func filterSensitiveData(params string) string {
+	if params == "" {
+		return ""
+	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(params), &data); err != nil {
+		return params // 如果不是 JSON，直接返回
+	}
+
+	sensitiveFields := []string{"password", "old_password", "new_password", "token", "refresh_token"}
+	for _, field := range sensitiveFields {
+		if _, ok := data[field]; ok {
+			data[field] = "******"
+		}
+	}
+
+	filteredBytes, _ := json.Marshal(data)
+	return string(filteredBytes)
 }
 
 // getRequestParams 获取请求参数

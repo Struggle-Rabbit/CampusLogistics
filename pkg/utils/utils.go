@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"strconv"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -35,4 +36,16 @@ func IsBlank(s *string) bool {
 		return true
 	}
 	return strings.TrimSpace(*s) == ""
+}
+
+// StrToInt 字符串转换为整数
+func StrToInt(s string) int {
+	i, _ := strconv.Atoi(s)
+	return i
+}
+
+// StrToInt64 字符串转换为 int64 类型
+func StrToInt64(s string) int64 {
+	i, _ := strconv.ParseInt(s, 10, 64)
+	return i
 }

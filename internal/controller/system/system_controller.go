@@ -1,4 +1,4 @@
-package systeam
+package system
 
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
@@ -7,12 +7,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type SysteamController struct {
+type SystemController struct {
 	srv *service.ServiceProvider
 }
 
-func NewSysteamController(srv *service.ServiceProvider) *SysteamController {
-	return &SysteamController{
+func NewSystemController(srv *service.ServiceProvider) *SystemController {
+	return &SystemController{
 		srv: srv,
 	}
 }
@@ -27,11 +27,13 @@ func NewSysteamController(srv *service.ServiceProvider) *SysteamController {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/OperationLogList [get]
-func (s *SysteamController) GetOperationLogListByPage(c *gin.Context) {
+func (s *SystemController) GetOperationLogListByPage(c *gin.Context) {
 	var optLogReq dto.OperationLogByPageReq
-	_ = utils.ShouldBind(c, &optLogReq)
+	if !utils.ShouldBind(c, &optLogReq) {
+		return
+	}
 
-	res, err := s.srv.SysteamService.GetOperationLogListByPage(&optLogReq)
+	res, err := s.srv.SystemService.GetOperationLogListByPage(&optLogReq)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -49,14 +51,14 @@ func (s *SysteamController) GetOperationLogListByPage(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/RefreshToken [get]
-func (s *SysteamController) RefreshToken(c *gin.Context) {
+func (s *SystemController) RefreshToken(c *gin.Context) {
 	refresh_token, isExistence := c.GetQuery("refresh_token")
 	if !isExistence {
 		utils.Fail(c, "token参数为必填")
 		return
 	}
 
-	res, err := s.srv.SysteamService.RefreshToken(refresh_token)
+	res, err := s.srv.SystemService.RefreshToken(refresh_token)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return

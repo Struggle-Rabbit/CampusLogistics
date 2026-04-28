@@ -29,7 +29,9 @@ func NewRoleController(srv *service.ServiceProvider) *RoleController {
 // @Router /api/v1/role/add [post]
 func (s *RoleController) CreateRole(c *gin.Context) {
 	var roleReq dto.CreateRoleReq
-	_ = utils.ShouldBind(c, &roleReq)
+	if !utils.ShouldBind(c, &roleReq) {
+		return
+	}
 	if err := s.srv.RoleService.CreateRole(&roleReq); err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -48,19 +50,16 @@ func (s *RoleController) CreateRole(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/role/del [post]
 func (s *RoleController) DelRole(c *gin.Context) {
-	var data map[string]interface{}
+	var data struct {
+		ID []string `json:"id" binding:"required"`
+	}
 
 	if err := c.ShouldBindJSON(&data); err != nil {
 		utils.Fail(c, "参数错误")
 		return
 	}
 
-	id, ok := data["id"].([]string)
-	if !ok || len(id) == 0 {
-		utils.Fail(c, "请选择要删除的数据")
-		return
-	}
-	if err := s.srv.RoleService.DelRole(id); err != nil {
+	if err := s.srv.RoleService.DelRole(data.ID); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -79,7 +78,9 @@ func (s *RoleController) DelRole(c *gin.Context) {
 // @Router /api/v1/role/update [post]
 func (s *RoleController) UpdateRole(c *gin.Context) {
 	var roleReq dto.UpdateRoleReq
-	_ = utils.ShouldBind(c, &roleReq)
+	if !utils.ShouldBind(c, &roleReq) {
+		return
+	}
 
 	if err := s.srv.RoleService.UpdateRole(&roleReq); err != nil {
 		utils.Fail(c, err.Error())
@@ -100,7 +101,9 @@ func (s *RoleController) UpdateRole(c *gin.Context) {
 // @Router /api/v1/role/listPage [get]
 func (s *RoleController) GetListByPage(c *gin.Context) {
 	var roleReq dto.RoleListByPageReq
-	_ = utils.ShouldBind(c, &roleReq)
+	if !utils.ShouldBind(c, &roleReq) {
+		return
+	}
 
 	res, err := s.srv.RoleService.GetRoleListByPage(&roleReq)
 	if err != nil {

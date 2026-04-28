@@ -63,12 +63,14 @@ func InitDB() error {
 			&model.SysMenu{},
 			&model.SysOperationLog{},
 			&model.RepairOrder{},
-			&model.CampusBuilding{},
+			&model.Campus{},
+			&model.Building{},
 			&model.DormRoom{},
 			&model.DormUser{},
 			&model.DormUtility{},
 			&model.Notice{},
 			&model.RepairRecord{},
+			&model.UtilityPrice{},
 		); err != nil {
 			return err
 		}

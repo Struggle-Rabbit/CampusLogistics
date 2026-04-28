@@ -12,7 +12,7 @@ type Notice struct {
 	PublishTime         *time.Time `gorm:"column:publish_time;index" json:"publish_time"`          // 发布时间
 	ViewCount           int        `gorm:"column:view_count;not null;default:0" json:"view_count"` // 浏览量
 	CreatorID           string     `gorm:"column:creator_id;not null;size:50" json:"creator_id"`   // 创建人学号/工号
-	Attachments         []string   `gorm:"column:attachments;type:json" json:"attachments"`        // 附件URL列表（JSON序列化）
+	Attachments         []string   `gorm:"column:attachments;type:json;serializer:json" json:"attachments"`        // 附件URL列表（JSON序列化）
 }
 
 func (Notice) TableName() string {

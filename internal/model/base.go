@@ -28,12 +28,12 @@ type BaseModelWithDelete struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"` // 软删除字段，JSON序列化时隐藏
 }
 
-func (bs *BaseModel) BeforeCreate() error {
+func (bs *BaseModel) BeforeCreate(tx *gorm.DB) error {
 	bs.ID = utils.GenStringID()
 	return nil
 }
 
-func (bs *BaseModelWithDelete) BeforeCreate() error {
+func (bs *BaseModelWithDelete) BeforeCreate(tx *gorm.DB) error {
 	bs.ID = utils.GenStringID()
 	return nil
 }

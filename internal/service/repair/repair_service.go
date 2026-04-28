@@ -2,14 +2,12 @@ package repair
 
 import (
 	"errors"
-	"fmt"
-	"math/rand"
-	"time"
 
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
+	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -23,17 +21,9 @@ func NewRepairService(app *app.App) *RepairService {
 	}
 }
 
-// GenerateOrderNo生成唯一报修单号
+// GenerateOrderNo 生成唯一报修单号
 func (RepairService) GenerateOrderNo(prefix string) string {
-	// 1. 获取当前时间，精确到秒 (格式: 20060102150405)
-	timestamp := time.Now().Format("20060102150405")
-
-	// 2. 生成6位随机数字 (区间: 100000 - 999999)
-	// 用 rand.Intn(900000) 得到 0-899999，再加 100000 保证是6位
-	randomPart := rand.Intn(900000) + 100000
-
-	// 3. 拼接结果
-	return fmt.Sprintf("%s%s%d", prefix, timestamp, randomPart)
+	return prefix + utils.GenStringID()
 }
 
 func (s *RepairService) RepairOrderSubmit(userID string, req *dto.RepairOrderSubmitReq) error {
@@ -54,59 +44,64 @@ func (s *RepairService) RepairOrderSubmit(userID string, req *dto.RepairOrderSub
 
 func (s *RepairService) GetListByPage(req *dto.RepairOrderListByPageReq) (*dto.PageResult, error) {
 	var total int64
-	var repairRes []*dto.RepairOrderResult
+	var repairList []*model.RepairOrder
 
 	db := s.app.DB.Model(&model.RepairOrder{})
+
+	if req.OrderNo != "" {
+		db = db.Where("order_no LIKE ?", "%"+req.OrderNo+"%")
+	}
+	if req.Contact != "" {
+		db = db.Where("contact LIKE ?", "%"+req.Contact+"%")
+	}
+	if req.HandlerID != nil && *req.HandlerID != "" {
+		db = db.Where("handler_id = ?", *req.HandlerID)
+	}
+	if req.Phone != "" {
+		db = db.Where("phone LIKE ?", "%"+req.Phone+"%")
+	}
+	if req.RepairType != 0 {
+		db = db.Where("repair_type = ?", req.RepairType)
+	}
+	if req.Status != 0 {
+		db = db.Where("status = ?", req.Status)
+	}
+	if req.StartTime != "" {
+		db = db.Where("created_at >= ?", req.StartTime)
+	}
+	if req.EndTime != "" {
+		db = db.Where("created_at <= ?", req.EndTime)
+	}
 
 	if err := db.Count(&total).Error; err != nil {
 		return nil, err
 	}
 
-	if req.OrderNo != "" {
-		db.Where("order_no = ?", req.OrderNo)
-	}
-	if req.Contact != "" {
-		db.Where("contact = ?", req.Contact)
-	}
-	if req.HandlerID != nil {
-		db.Where("handler_id = ?", req.HandlerID)
-	}
-	if req.Phone != "" {
-		db.Where("phone = ?", req.Phone)
-	}
-	if req.RepairType != 0 {
-		db.Where("repair_type = ?", req.RepairType)
-	}
-	if req.Status != 0 {
-		db.Where("status = ?", req.Status)
-	}
-
-	if err := db.Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Scan(&repairRes).Error; err != nil {
+	if err := db.Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Order("created_at DESC").Find(&repairList).Error; err != nil {
 		return nil, err
 	}
 
-	// var dtoList []*dto.RepairOrderResult
-
-	// for _, v := range repairRes {
-	// 	dtoList = append(dtoList, &dto.RepairOrderResult{
-	// 		ID:          v.ID,
-	// 		OrderNo:     v.OrderNo,
-	// 		UserID:      v.UserID,
-	// 		RepairType:  v.RepairType,
-	// 		Address:     v.Address,
-	// 		Description: v.Description,
-	// 		Images:      v.Images,
-	// 		Contact:     v.Contact,
-	// 		Phone:       v.Phone,
-	// 		Status:      v.Status,
-	// 		HandlerID:   v.HandlerID,
-	// 		CreatedAt:   v.CreatedAt,
-	// 		UpdatedAt:   v.UpdatedAt,
-	// 	})
-	// }
+	var dtoList []*dto.RepairOrderResult
+	for _, v := range repairList {
+		dtoList = append(dtoList, &dto.RepairOrderResult{
+			ID:          v.ID,
+			OrderNo:     v.OrderNo,
+			UserID:      v.UserID,
+			RepairType:  v.RepairType,
+			Address:     v.Address,
+			Description: v.Description,
+			Images:      v.Images,
+			Contact:     v.Contact,
+			Phone:       v.Phone,
+			Status:      v.Status,
+			HandlerID:   v.HandlerID,
+			CreatedAt:   v.CreatedAt,
+			UpdatedAt:   v.UpdatedAt,
+		})
+	}
 
 	return &dto.PageResult{
-		List:        repairRes,
+		List:        dtoList,
 		Total:       total,
 		PageSize:    req.PageSize,
 		CurrentPage: req.CurrentPage,
@@ -114,40 +109,62 @@ func (s *RepairService) GetListByPage(req *dto.RepairOrderListByPageReq) (*dto.P
 }
 
 func (s *RepairService) GetDetailById(id string) (*dto.RepairOrderResult, error) {
-	var repairOrder dto.RepairOrderResult
-	if err := s.app.DB.Model(&model.RepairOrder{}).Where("id = ?", id).First(&repairOrder).Error; err != nil {
+	var order model.RepairOrder
+	if err := s.app.DB.Where("id = ?", id).First(&order).Error; err != nil {
 		return nil, err
 	}
-	// &dto.RepairOrderResult{
-	// 	ID:          repairOrder.ID,
-	// 	CreatedAt:   repairOrder.CreatedAt,
-	// 	UpdatedAt:   repairOrder.UpdatedAt,
-	// 	OrderNo:     repairOrder.OrderNo,
-	// 	UserID:      repairOrder.UserID,
-	// 	RepairType:  repairOrder.RepairType,
-	// 	Address:     repairOrder.Address,
-	// 	Description: repairOrder.Description,
-	// 	Images:      repairOrder.Images,
-	// 	Contact:     repairOrder.Contact,
-	// 	Phone:       repairOrder.Phone,
-	// 	Status:      repairOrder.Status,
-	// 	HandlerID:   repairOrder.HandlerID,
-	// }
-	return &repairOrder, nil
+
+	var records []model.RepairRecord
+	s.app.DB.Where("order_id = ?", id).Order("created_at DESC").Find(&records)
+
+	recordDTOs := make([]*dto.RepairRecordResult, len(records))
+	for i, r := range records {
+		recordDTOs[i] = &dto.RepairRecordResult{
+			ID:         r.ID,
+			OrderID:    r.OrderID,
+			OperatorID: r.OperatorID,
+			OldStatus:  r.OldStatus,
+			NewStatus:  r.NewStatus,
+			Remark:     r.Remark,
+			CreatedAt:  r.CreatedAt,
+		}
+	}
+
+	return &dto.RepairOrderResult{
+		ID:          order.ID,
+		OrderNo:     order.OrderNo,
+		UserID:      order.UserID,
+		RepairType:  order.RepairType,
+		Address:     order.Address,
+		Description: order.Description,
+		Images:      order.Images,
+		Contact:     order.Contact,
+		Phone:       order.Phone,
+		Status:      order.Status,
+		HandlerID:   order.HandlerID,
+		CreatedAt:   order.CreatedAt,
+		UpdatedAt:   order.UpdatedAt,
+		Records:     recordDTOs,
+	}, nil
 }
 
 func (s *RepairService) DelRepairOrderById(id string) error {
-	if err := s.app.DB.Delete(&model.RepairOrder{}, id).Error; err != nil {
-		return err
-	}
-	return nil
+	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+		// 软删除报修单
+		if err := tx.Delete(&model.RepairOrder{}, "id = ?", id).Error; err != nil {
+			return err
+		}
+		// 级联删除流转记录 (这里也可以选择软删除，但 RepairRecord 目前没加 DeletedAt)
+		if err := tx.Where("order_id = ?", id).Delete(&model.RepairRecord{}).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func (s *RepairService) UpdateRepairOrder(req dto.UpdateRepairOrderSubmitReq) error {
 	var order model.RepairOrder
-	db := s.app.DB.Model(&model.RepairOrder{}).Where("id = ?", req.ID)
-
-	if err := db.First(&order).Error; err != nil {
+	if err := s.app.DB.Where("id = ?", req.ID).First(&order).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("未找到订单记录")
 		}
@@ -158,15 +175,15 @@ func (s *RepairService) UpdateRepairOrder(req dto.UpdateRepairOrderSubmitReq) er
 		return errors.New("只有待分配可编辑")
 	}
 
-	return db.Where("id = ?", req.ID).Updates(&model.RepairOrder{
-		RepairType:  req.RepairType,
-		Address:     req.Address,
-		Status:      req.Status,
-		Description: req.Description,
-		Contact:     req.Contact,
-		Phone:       req.Phone,
-		Images:      req.Images,
-		HandlerID:   req.HandlerID,
+	return s.app.DB.Model(&order).Updates(map[string]interface{}{
+		"repair_type": req.RepairType,
+		"address":     req.Address,
+		"status":      req.Status,
+		"description": req.Description,
+		"contact":     req.Contact,
+		"phone":       req.Phone,
+		"images":      req.Images,
+		"handler_id":  req.HandlerID,
 	}).Error
 }
 
@@ -178,15 +195,22 @@ func (s *RepairService) OrderRecord(req dto.RecordReq) error {
 	if tx.Error != nil {
 		return tx.Error
 	}
-	defer tx.Rollback() // 任何异常都会自动回滚
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	var order model.RepairOrder
 	if err := tx.Model(&model.RepairOrder{}).Where("id = ?", req.ID).First(&order).Error; err != nil {
+		tx.Rollback()
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("未找到订单记录")
 		}
 		return err
 	}
 	if order.Status == 4 || order.Status == 5 || order.Status == 6 {
+		tx.Rollback()
 		return errors.New("当前订单不可流转")
 	}
 
@@ -199,10 +223,12 @@ func (s *RepairService) OrderRecord(req dto.RecordReq) error {
 		})
 
 	if result.Error != nil {
+		tx.Rollback()
 		return result.Error
 	}
 
 	if result.RowsAffected == 0 {
+		tx.Rollback()
 		return errors.New("订单状态更新失败")
 	}
 
@@ -213,6 +239,7 @@ func (s *RepairService) OrderRecord(req dto.RecordReq) error {
 		NewStatus:  req.Status,
 		Remark:     req.Remark,
 	}).Error; err != nil {
+		tx.Rollback()
 		return err
 	}
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/config"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/controller/notice"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/middleware"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/logger"
@@ -16,37 +17,43 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// InitRouter 初始化总路由
 func initRouter(app *app.App) *gin.Engine {
-	// 初始化 gin
 	r := gin.Default()
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// 全局中间件
 	r.Use(
-		middleware.Recovery(),  // 崩溃恢复
-		middleware.RequestID(), // 请求ID
-		middleware.Logger(),    // 日志
-		middleware.CORS(),      // 跨域
+		middleware.Recovery(),
+		middleware.RequestID(),
+		middleware.Logger(),
+		middleware.CORS(),
 	)
 
 	srv := service.NewServiceProvider(app)
 
-	// ===================== 路由分组 =====================
 	api := r.Group("/api/v1")
 	api.Use(middleware.OperationLogMiddleware())
 	{
-		LoadCommonRouter(api, srv) // 公共模块
-		// 需要Token的
+		LoadCommonRouter(api, srv)
+
+		noticeCtl := notice.NewNoticeController(srv)
+		noticeGroup := api.Group("/notice")
+		{
+			noticeGroup.GET("/public", noticeCtl.GetPublicList)
+		}
+
 		api.Use(middleware.JWTAuth())
 		{
-			LoadUserRouter(api, srv)    // 用户模块
-			LoadSysteamRouter(api, srv) // 系统模块
-			LoadRoleRouter(api, srv)    // 角色
-			LoadMenuRouter(api, srv)    // 菜单权限
-			//LoadDormRouter(api)   // 宿舍模块
-			//LoadRepairRouter(api) // 报修模块
+			LoadUserRouter(api, srv)
+			LoadSystemRouter(api, srv)
+			LoadRoleRouter(api, srv)
+			LoadMenuRouter(api, srv)
+			LoadRepairRouter(api, srv)
+			LoadCampusRouter(api, srv)
+			LoadBuildingRouter(api, srv)
+			LoadDormRouter(api, srv)
+			LoadUtilityRouter(api, srv)
+			LoadNoticeRouter(api, srv)
 		}
 
 	}
@@ -56,7 +63,6 @@ func initRouter(app *app.App) *gin.Engine {
 
 func Run(app *app.App) error {
 	globalAppConfig := config.GlobalConfig.App
-	// 注册路由
 	fmt.Println("注册路由....")
 	r := initRouter(app)
 

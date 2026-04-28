@@ -14,8 +14,9 @@ func LoadUserRouter(api *gin.RouterGroup, srv *service.ServiceProvider) {
 	{
 		user.GET("/listPage", middleware.PermissionValidator("sys:user:list"), userCtl.GetListByPage)
 		user.GET("/detail", middleware.PermissionValidator("sys:user:detail"), userCtl.QueryDetail)
-		user.GET("/del", middleware.PermissionValidator("sys:user:del"), userCtl.DelUser)
-		user.GET("/update", middleware.PermissionValidator("sys:user:update"), userCtl.UpdateUser)
+		user.POST("/del", middleware.PermissionValidator("sys:user:del"), userCtl.DelUser)
+		user.POST("/update", middleware.PermissionValidator("sys:user:update"), userCtl.UpdateUser)
+		user.POST("/resetPassword", userCtl.ResetPassword)
 		user.GET("/getUserPermission", userCtl.GetUserPermission)
 	}
 
