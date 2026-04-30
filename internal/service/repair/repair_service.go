@@ -151,8 +151,12 @@ func (s *RepairService) GetDetailById(id string) (*dto.RepairOrderResult, error)
 func (s *RepairService) DelRepairOrderById(id string) error {
 	return s.app.DB.Transaction(func(tx *gorm.DB) error {
 		// 软删除报修单
-		if err := tx.Delete(&model.RepairOrder{}, "id = ?", id).Error; err != nil {
-			return err
+		result := tx.Where("id = ?", id).Delete(&model.RepairOrder{})
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return errors.New("报修单不存在或已被删除")
 		}
 		// 级联删除流转记录 (这里也可以选择软删除，但 RepairRecord 目前没加 DeletedAt)
 		if err := tx.Where("order_id = ?", id).Delete(&model.RepairRecord{}).Error; err != nil {
@@ -191,57 +195,40 @@ func (s *RepairService) OrderRecord(req dto.RecordReq) error {
 	if req.Status < 1 || req.Status > 6 {
 		return errors.New("无效的订单状态")
 	}
-	tx := s.app.DB.Begin()
-	if tx.Error != nil {
-		return tx.Error
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
+	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+		var order model.RepairOrder
+		if err := tx.Model(&model.RepairOrder{}).Where("id = ?", req.ID).First(&order).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return errors.New("未找到订单记录")
+			}
+			return err
 		}
-	}()
-
-	var order model.RepairOrder
-	if err := tx.Model(&model.RepairOrder{}).Where("id = ?", req.ID).First(&order).Error; err != nil {
-		tx.Rollback()
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("未找到订单记录")
+		if order.Status == 4 || order.Status == 5 || order.Status == 6 {
+			return errors.New("当前订单不可流转")
 		}
-		return err
-	}
-	if order.Status == 4 || order.Status == 5 || order.Status == 6 {
-		tx.Rollback()
-		return errors.New("当前订单不可流转")
-	}
 
-	result := tx.Model(&model.RepairOrder{}).
-		Where("id = ? AND status = ?", req.ID, order.Status). // 核心：乐观锁条件
-		Select("status", "handler_id").
-		Updates(&model.RepairOrder{
-			Status:    req.Status,
-			HandlerID: &req.UserID,
-		})
+		result := tx.Model(&model.RepairOrder{}).
+			Where("id = ? AND status = ?", req.ID, order.Status). // 核心：乐观锁条件
+			Select("status", "handler_id").
+			Updates(&model.RepairOrder{
+				Status:    req.Status,
+				HandlerID: &req.UserID,
+			})
 
-	if result.Error != nil {
-		tx.Rollback()
-		return result.Error
-	}
+		if result.Error != nil {
+			return result.Error
+		}
 
-	if result.RowsAffected == 0 {
-		tx.Rollback()
-		return errors.New("订单状态更新失败")
-	}
+		if result.RowsAffected == 0 {
+			return errors.New("订单状态更新失败")
+		}
 
-	if err := tx.Create(&model.RepairRecord{
-		OrderID:    req.ID,
-		OperatorID: req.UserID,
-		OldStatus:  order.Status,
-		NewStatus:  req.Status,
-		Remark:     req.Remark,
-	}).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	return tx.Commit().Error
+		return tx.Create(&model.RepairRecord{
+			OrderID:    req.ID,
+			OperatorID: req.UserID,
+			OldStatus:  order.Status,
+			NewStatus:  req.Status,
+			Remark:     req.Remark,
+		}).Error
+	})
 }

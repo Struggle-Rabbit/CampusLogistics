@@ -60,7 +60,7 @@ func (s *SystemController) RefreshToken(c *gin.Context) {
 
 	res, err := s.srv.SystemService.RefreshToken(refresh_token)
 	if err != nil {
-		utils.Fail(c, err.Error())
+		utils.Unauth(c, "token过期或无效")
 		return
 	}
 	utils.Success(c, res, "获取成功")

@@ -65,8 +65,8 @@ func (s *UserService) Register(req *dto.RegisterReq) error {
 
 func (s *UserService) Login(req *dto.LoginReq) (*dto.LoginResult, error) {
 	var sysUser model.SysUser
-	err := s.app.DB.Where("mobile = ? OR user_code = ?", req.Account, req.Account).First(&sysUser).Error
-	if err == nil {
+	db := s.app.DB.Model(&model.SysUser{}).Where("mobile = ? OR user_code = ?", req.Account, req.Account)
+	if err := db.First(&sysUser).Error; err == nil {
 		// 密码校验
 		if err := utils.VerifyPasswordFunc(sysUser.Password, req.Password); err != nil {
 			return nil, errors.New("账号密码不正确")
@@ -82,6 +82,10 @@ func (s *UserService) Login(req *dto.LoginReq) (*dto.LoginResult, error) {
 	accessToken, refreshToken, err := utils.GenerateToken(sysUser.ID, sysUser.Name)
 
 	if err != nil {
+		return nil, err
+	}
+
+	if err := db.Update("refresh_token", refreshToken).Error; err != nil {
 		return nil, err
 	}
 

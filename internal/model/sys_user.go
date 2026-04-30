@@ -11,6 +11,7 @@ type SysUser struct {
 	Avatar              string    `gorm:"column:avatar;size:255" json:"avatar"`                           // 头像URL
 	UserType            string    `gorm:"column:user_type;not null;size:10" json:"user_type"`             // 用户类型: 00-管理员  01-职工  02-学生
 	Roles               []SysRole `gorm:"many2many:sys_user_role;"`
+	RefreshToken        string    `gorm:"column:refresh_token;uniqueIndex;not null;type:text" json:"refresh_token"`
 }
 
 // TableName 指定表名

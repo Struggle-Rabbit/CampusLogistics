@@ -5,7 +5,6 @@ import (
 
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/config"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/controller/notice"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/middleware"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/logger"
@@ -35,12 +34,6 @@ func initRouter(app *app.App) *gin.Engine {
 	api.Use(middleware.OperationLogMiddleware())
 	{
 		LoadCommonRouter(api, srv)
-
-		noticeCtl := notice.NewNoticeController(srv)
-		noticeGroup := api.Group("/notice")
-		{
-			noticeGroup.GET("/public", noticeCtl.GetPublicList)
-		}
 
 		api.Use(middleware.JWTAuth())
 		{

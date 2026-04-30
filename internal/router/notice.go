@@ -18,6 +18,5 @@ func LoadNoticeRouter(api *gin.RouterGroup, srv *service.ServiceProvider) {
 		noticeGroup.GET("/list", middleware.PermissionValidator("notice:list"), noticeCtl.GetListByPage)
 		noticeGroup.GET("/detail", middleware.PermissionValidator("notice:detail"), noticeCtl.GetDetail)
 		noticeGroup.POST("/top", middleware.PermissionValidator("notice:top"), noticeCtl.SetTop)
-		noticeGroup.GET("/public", noticeCtl.GetPublicList)
 	}
 }
