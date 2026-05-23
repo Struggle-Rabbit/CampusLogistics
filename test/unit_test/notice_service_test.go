@@ -11,7 +11,7 @@ import (
 
 func TestNoticeService(t *testing.T) {
 	_, appInstance := SetupTestDB()
-	svc := notice.NewNoticeService(appInstance)
+	svc := &notice.NoticeServiceProvider{App: appInstance}
 
 	creatorID := "ADMIN001"
 	now := time.Now()

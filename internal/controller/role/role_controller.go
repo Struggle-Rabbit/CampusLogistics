@@ -2,19 +2,22 @@ package role
 
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/role"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
-type RoleController struct {
-	srv *service.ServiceProvider
+type RoleController interface {
+	CreateRole(c *gin.Context)
+	DelRole(c *gin.Context)
+	UpdateRole(c *gin.Context)
+	GetListByPage(c *gin.Context)
+	GetList(c *gin.Context)
+	QueryDetail(c *gin.Context)
 }
 
-func NewRoleController(srv *service.ServiceProvider) *RoleController {
-	return &RoleController{
-		srv: srv,
-	}
+type RoleControllerProvider struct {
+	RoleSvc role.RoleService
 }
 
 // CreateRole 创建角色
@@ -27,12 +30,12 @@ func NewRoleController(srv *service.ServiceProvider) *RoleController {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/role/add [post]
-func (s *RoleController) CreateRole(c *gin.Context) {
+func (s *RoleControllerProvider) CreateRole(c *gin.Context) {
 	var roleReq dto.CreateRoleReq
 	if !utils.ShouldBind(c, &roleReq) {
 		return
 	}
-	if err := s.srv.RoleService.CreateRole(&roleReq); err != nil {
+	if err := s.RoleSvc.CreateRole(&roleReq); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -49,7 +52,7 @@ func (s *RoleController) CreateRole(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/role/del [post]
-func (s *RoleController) DelRole(c *gin.Context) {
+func (s *RoleControllerProvider) DelRole(c *gin.Context) {
 	var data struct {
 		ID []string `json:"id" binding:"required"`
 	}
@@ -59,7 +62,7 @@ func (s *RoleController) DelRole(c *gin.Context) {
 		return
 	}
 
-	if err := s.srv.RoleService.DelRole(data.ID); err != nil {
+	if err := s.RoleSvc.DelRole(data.ID); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -76,13 +79,13 @@ func (s *RoleController) DelRole(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/role/update [post]
-func (s *RoleController) UpdateRole(c *gin.Context) {
+func (s *RoleControllerProvider) UpdateRole(c *gin.Context) {
 	var roleReq dto.UpdateRoleReq
 	if !utils.ShouldBind(c, &roleReq) {
 		return
 	}
 
-	if err := s.srv.RoleService.UpdateRole(&roleReq); err != nil {
+	if err := s.RoleSvc.UpdateRole(&roleReq); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -99,13 +102,13 @@ func (s *RoleController) UpdateRole(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/role/listPage [get]
-func (s *RoleController) GetListByPage(c *gin.Context) {
+func (s *RoleControllerProvider) GetListByPage(c *gin.Context) {
 	var roleReq dto.RoleListByPageReq
 	if !utils.ShouldBind(c, &roleReq) {
 		return
 	}
 
-	res, err := s.srv.RoleService.GetRoleListByPage(&roleReq)
+	res, err := s.RoleSvc.GetRoleListByPage(&roleReq)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -123,11 +126,11 @@ func (s *RoleController) GetListByPage(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/role/list [get]
-func (s *RoleController) GetList(c *gin.Context) {
+func (s *RoleControllerProvider) GetList(c *gin.Context) {
 
 	name, _ := c.GetQuery("name")
 
-	res, err := s.srv.RoleService.GetRoleList(name)
+	res, err := s.RoleSvc.GetRoleList(name)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -145,7 +148,7 @@ func (s *RoleController) GetList(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/role/detail [get]
-func (s *RoleController) QueryDetail(c *gin.Context) {
+func (s *RoleControllerProvider) QueryDetail(c *gin.Context) {
 	var data map[string]interface{}
 	if err := c.ShouldBindJSON(&data); err != nil {
 		utils.Fail(c, "参数错误")
@@ -157,7 +160,7 @@ func (s *RoleController) QueryDetail(c *gin.Context) {
 		utils.Fail(c, "数据ID不能为空")
 		return
 	}
-	res, err := s.srv.RoleService.RoleDetailById(id)
+	res, err := s.RoleSvc.RoleDetailById(id)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return

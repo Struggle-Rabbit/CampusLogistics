@@ -10,7 +10,7 @@ import (
 
 func TestRoleService(t *testing.T) {
 	_, appInstance := SetupTestDB()
-	svc := role.NewRoleService(appInstance)
+	svc := &role.RoleServiceProvider{App: appInstance}
 
 	var roleID string
 

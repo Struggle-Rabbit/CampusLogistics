@@ -11,8 +11,8 @@ import (
 
 func TestCampusAndBuildingService(t *testing.T) {
 	_, appInstance := SetupTestDB()
-	campusSvc := campus.NewCampusService(appInstance)
-	buildingSvc := building.NewBuildingService(appInstance)
+	campusSvc := &campus.CampusServiceProvider{App: appInstance}
+	buildingSvc := &building.BuildingServiceProvider{App: appInstance}
 
 	t.Run("创建校区", func(t *testing.T) {
 		req := &dto.CampusCreateReq{

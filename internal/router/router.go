@@ -6,7 +6,16 @@ import (
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/config"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/middleware"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/building"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/campus"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/dorm"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/menu"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/notice"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/repair"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/role"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/system"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/user"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/utility"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -28,25 +37,34 @@ func initRouter(app *app.App) *gin.Engine {
 		middleware.CORS(),
 	)
 
-	srv := service.NewServiceProvider(app)
+	menuSvc := &menu.MenuServiceProvider{App: app}
+	roleSvc := &role.RoleServiceProvider{App: app}
+	userSvc := &user.UserServiceProvider{App: app, Menu: menuSvc}
+	systemSvc := &system.SystemServiceProvider{App: app}
+	repairSvc := &repair.RepairServiceProvider{App: app}
+	campusSvc := &campus.CampusServiceProvider{App: app}
+	buildingSvc := &building.BuildingServiceProvider{App: app}
+	dormSvc := &dorm.DormServiceProvider{App: app}
+	utilitySvc := &utility.UtilityServiceProvider{App: app}
+	noticeSvc := &notice.NoticeServiceProvider{App: app}
 
 	api := r.Group("/api/v1")
 	api.Use(middleware.OperationLogMiddleware())
 	{
-		LoadCommonRouter(api, srv)
+		LoadCommonRouter(api, userSvc, noticeSvc)
 
 		api.Use(middleware.JWTAuth())
 		{
-			LoadUserRouter(api, srv)
-			LoadSystemRouter(api, srv)
-			LoadRoleRouter(api, srv)
-			LoadMenuRouter(api, srv)
-			LoadRepairRouter(api, srv)
-			LoadCampusRouter(api, srv)
-			LoadBuildingRouter(api, srv)
-			LoadDormRouter(api, srv)
-			LoadUtilityRouter(api, srv)
-			LoadNoticeRouter(api, srv)
+			LoadUserRouter(api, userSvc)
+			LoadSystemRouter(api, systemSvc)
+			LoadRoleRouter(api, roleSvc)
+			LoadMenuRouter(api, menuSvc)
+			LoadRepairRouter(api, repairSvc)
+			LoadCampusRouter(api, campusSvc)
+			LoadBuildingRouter(api, buildingSvc)
+			LoadDormRouter(api, dormSvc)
+			LoadUtilityRouter(api, utilitySvc)
+			LoadNoticeRouter(api, noticeSvc)
 		}
 
 	}

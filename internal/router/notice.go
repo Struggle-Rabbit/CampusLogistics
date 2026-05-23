@@ -1,14 +1,14 @@
 package router
 
 import (
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/controller/notice"
+	noticecontroller "github.com/Struggle-Rabbit/CampusLogistics/internal/controller/notice"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/middleware"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/notice"
 	"github.com/gin-gonic/gin"
 )
 
-func LoadNoticeRouter(api *gin.RouterGroup, srv *service.ServiceProvider) {
-	noticeCtl := notice.NewNoticeController(srv)
+func LoadNoticeRouter(api *gin.RouterGroup, noticeSvc notice.NoticeService) {
+	noticeCtl := &noticecontroller.NoticeControllerProvider{NoticeSvc: noticeSvc}
 
 	noticeGroup := api.Group("/notice")
 	{

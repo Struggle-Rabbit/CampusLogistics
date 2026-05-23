@@ -1,14 +1,14 @@
 package router
 
 import (
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/controller/repair"
+	repairctl "github.com/Struggle-Rabbit/CampusLogistics/internal/controller/repair"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/middleware"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/repair"
 	"github.com/gin-gonic/gin"
 )
 
-func LoadRepairRouter(api *gin.RouterGroup, srv *service.ServiceProvider) {
-	repairCtl := repair.NewRepairController(srv)
+func LoadRepairRouter(api *gin.RouterGroup, repairSvc repair.RepairService) {
+	repairCtl := &repairctl.RepairControllerProvider{RepairSvc: repairSvc}
 
 	repairGroup := api.Group("/repair")
 	{

@@ -1,15 +1,16 @@
 package router
 
 import (
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/controller/campus"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/controller/building"
+	campusCtrl "github.com/Struggle-Rabbit/CampusLogistics/internal/controller/campus"
+	buildingCtrl "github.com/Struggle-Rabbit/CampusLogistics/internal/controller/building"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/middleware"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/building"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/campus"
 	"github.com/gin-gonic/gin"
 )
 
-func LoadCampusRouter(api *gin.RouterGroup, srv *service.ServiceProvider) {
-	campusCtl := campus.NewCampusController(srv)
+func LoadCampusRouter(api *gin.RouterGroup, campusSvc campus.CampusService) {
+	campusCtl := &campusCtrl.CampusControllerProvider{CampusSvc: campusSvc}
 
 	campusGroup := api.Group("/campus")
 	{
@@ -22,8 +23,8 @@ func LoadCampusRouter(api *gin.RouterGroup, srv *service.ServiceProvider) {
 	}
 }
 
-func LoadBuildingRouter(api *gin.RouterGroup, srv *service.ServiceProvider) {
-	buildingCtl := building.NewBuildingController(srv)
+func LoadBuildingRouter(api *gin.RouterGroup, buildingSvc building.BuildingService) {
+	buildingCtl := &buildingCtrl.BuildingControllerProvider{BuildingSvc: buildingSvc}
 
 	buildingGroup := api.Group("/building")
 	{

@@ -2,19 +2,22 @@ package menu
 
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/menu"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
-type MenuController struct {
-	srv *service.ServiceProvider
+type MenuController interface {
+	CreateMenu(c *gin.Context)
+	DelMenu(c *gin.Context)
+	UpdateMenu(c *gin.Context)
+	GetListByPage(c *gin.Context)
+	GetList(c *gin.Context)
+	QueryDetail(c *gin.Context)
 }
 
-func NewMenuController(srv *service.ServiceProvider) *MenuController {
-	return &MenuController{
-		srv: srv,
-	}
+type MenuControllerProvider struct {
+	MenuSvc menu.MenuService
 }
 
 // CreateMenu 菜单创建
@@ -27,10 +30,10 @@ func NewMenuController(srv *service.ServiceProvider) *MenuController {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/menu/add [post]
-func (mc *MenuController) CreateMenu(c *gin.Context) {
+func (mc *MenuControllerProvider) CreateMenu(c *gin.Context) {
 	var menuReq dto.CreateMenuReq
 	_ = utils.ShouldBind(c, &menuReq)
-	if err := mc.srv.MenuService.CreateMenu(&menuReq); err != nil {
+	if err := mc.MenuSvc.CreateMenu(&menuReq); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -47,7 +50,7 @@ func (mc *MenuController) CreateMenu(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/menu/del [post]
-func (mc *MenuController) DelMenu(c *gin.Context) {
+func (mc *MenuControllerProvider) DelMenu(c *gin.Context) {
 	var data map[string]interface{}
 
 	if err := c.ShouldBindJSON(&data); err != nil {
@@ -60,7 +63,7 @@ func (mc *MenuController) DelMenu(c *gin.Context) {
 		utils.Fail(c, "请选择要删除的数据")
 		return
 	}
-	if err := mc.srv.MenuService.DelMenu(id); err != nil {
+	if err := mc.MenuSvc.DelMenu(id); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -77,11 +80,11 @@ func (mc *MenuController) DelMenu(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/menu/update [post]
-func (mc *MenuController) UpdateMenu(c *gin.Context) {
+func (mc *MenuControllerProvider) UpdateMenu(c *gin.Context) {
 	var menuReq dto.UpdateMenuReq
 	_ = utils.ShouldBind(c, &menuReq)
 
-	if err := mc.srv.MenuService.UpdateMenu(&menuReq); err != nil {
+	if err := mc.MenuSvc.UpdateMenu(&menuReq); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -98,11 +101,11 @@ func (mc *MenuController) UpdateMenu(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/menu/listPage [get]
-func (mc *MenuController) GetListByPage(c *gin.Context) {
+func (mc *MenuControllerProvider) GetListByPage(c *gin.Context) {
 	var menuReq dto.MenuListByPageReq
 	_ = utils.ShouldBind(c, &menuReq)
 
-	res, err := mc.srv.MenuService.GetMenuListByPage(&menuReq)
+	res, err := mc.MenuSvc.GetMenuListByPage(&menuReq)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -120,11 +123,11 @@ func (mc *MenuController) GetListByPage(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/menu/listPage [get]
-func (mc *MenuController) GetList(c *gin.Context) {
+func (mc *MenuControllerProvider) GetList(c *gin.Context) {
 	var menuReq dto.MenuListReq
 	_ = utils.ShouldBind(c, &menuReq)
 
-	res, err := mc.srv.MenuService.GetMenuList(&menuReq)
+	res, err := mc.MenuSvc.GetMenuList(&menuReq)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -142,7 +145,7 @@ func (mc *MenuController) GetList(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/menu/detail [get]
-func (mc *MenuController) QueryDetail(c *gin.Context) {
+func (mc *MenuControllerProvider) QueryDetail(c *gin.Context) {
 	var data map[string]interface{}
 	if err := c.ShouldBindJSON(&data); err != nil {
 		utils.Fail(c, "参数错误")
@@ -154,7 +157,7 @@ func (mc *MenuController) QueryDetail(c *gin.Context) {
 		utils.Fail(c, "数据ID不能为空")
 		return
 	}
-	res, err := mc.srv.MenuService.MenuDetailById(id)
+	res, err := mc.MenuSvc.MenuDetailById(id)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return

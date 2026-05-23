@@ -12,21 +12,33 @@ import (
 	"gorm.io/gorm"
 )
 
-type UtilityService struct {
-	app *app.App
+type UtilityService interface {
+	Create(req *dto.UtilityCreateReq) error
+	Update(req *dto.UtilityUpdateReq) error
+	Delete(ids []string) error
+	GetListByPage(req *dto.UtilityListPageReq) (*dto.PageResult, error)
+	GetDetail(id string) (*dto.UtilityResult, error)
+	Pay(req *dto.UtilityPayReq) error
+	BatchPay(req *dto.UtilityBatchPayReq) error
+	ImportData(reqs []*dto.UtilityImportReq) (int, error)
+	UpdatePrice(req *dto.UtilityPriceReq) error
+	GetPrice() (*dto.UtilityPriceResult, error)
+	GetStatistics(campusID string, year, month int) (*dto.UtilityStatResult, error)
+	GetUnpaidWarning() ([]*dto.UtilityResult, error)
+	GetUserDormUtility(userID string, year, month int) (*dto.PageResult, error)
 }
 
-func NewUtilityService(app *app.App) *UtilityService {
-	return &UtilityService{app: app}
+type UtilityServiceProvider struct {
+	App *app.App
 }
 
-func (s *UtilityService) Create(req *dto.UtilityCreateReq) error {
+func (s *UtilityServiceProvider) Create(req *dto.UtilityCreateReq) error {
 	if err := s.checkRoomExists(req.RoomID); err != nil {
 		return err
 	}
 
 	var existCount int64
-	s.app.DB.Model(&model.DormUtility{}).Where("room_id = ? AND year = ? AND month = ?", req.RoomID, req.Year, req.Month).Count(&existCount)
+	s.App.DB.Model(&model.DormUtility{}).Where("room_id = ? AND year = ? AND month = ?", req.RoomID, req.Year, req.Month).Count(&existCount)
 	if existCount > 0 {
 		return errors.New("该宿舍本月水电记录已存在")
 	}
@@ -42,11 +54,11 @@ func (s *UtilityService) Create(req *dto.UtilityCreateReq) error {
 		Amount:        amount,
 		PayStatus:     1,
 	}
-	return s.app.DB.Create(utility).Error
+	return s.App.DB.Create(utility).Error
 }
 
-func (s *UtilityService) Update(req *dto.UtilityUpdateReq) error {
-	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+func (s *UtilityServiceProvider) Update(req *dto.UtilityUpdateReq) error {
+	return s.App.DB.Transaction(func(tx *gorm.DB) error {
 		var utility model.DormUtility
 		if err := tx.First(&utility, "id = ?", req.ID).Error; err != nil {
 			return errors.New("水电费记录不存在")
@@ -65,8 +77,8 @@ func (s *UtilityService) Update(req *dto.UtilityUpdateReq) error {
 	})
 }
 
-func (s *UtilityService) Delete(ids []string) error {
-	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+func (s *UtilityServiceProvider) Delete(ids []string) error {
+	return s.App.DB.Transaction(func(tx *gorm.DB) error {
 		for _, id := range ids {
 			var utility model.DormUtility
 			if err := tx.First(&utility, "id = ?", id).Error; err != nil {
@@ -80,10 +92,10 @@ func (s *UtilityService) Delete(ids []string) error {
 	})
 }
 
-func (s *UtilityService) GetListByPage(req *dto.UtilityListPageReq) (*dto.PageResult, error) {
+func (s *UtilityServiceProvider) GetListByPage(req *dto.UtilityListPageReq) (*dto.PageResult, error) {
 	var list []*model.DormUtility
 	var total int64
-	db := s.app.DB.Model(&model.DormUtility{})
+	db := s.App.DB.Model(&model.DormUtility{})
 
 	if req.RoomID != "" {
 		db = db.Where("room_id = ?", req.RoomID)
@@ -100,12 +112,12 @@ func (s *UtilityService) GetListByPage(req *dto.UtilityListPageReq) (*dto.PageRe
 
 	if req.BuildingID != "" {
 		db = db.Where("room_id IN ?",
-			s.app.DB.Model(&model.DormRoom{}).Select("id").Where("building_id = ?", req.BuildingID))
+			s.App.DB.Model(&model.DormRoom{}).Select("id").Where("building_id = ?", req.BuildingID))
 	}
 	if req.CampusID != "" {
 		db = db.Where("room_id IN ?",
-			s.app.DB.Model(&model.DormRoom{}).Select("id").Where("building_id IN ?",
-				s.app.DB.Model(&model.Building{}).Select("id").Where("campus_id = ?", req.CampusID)))
+			s.App.DB.Model(&model.DormRoom{}).Select("id").Where("building_id IN ?",
+				s.App.DB.Model(&model.Building{}).Select("id").Where("campus_id = ?", req.CampusID)))
 	}
 
 	if err := db.Count(&total).Error; err != nil {
@@ -173,9 +185,9 @@ func (s *UtilityService) GetListByPage(req *dto.UtilityListPageReq) (*dto.PageRe
 	}, nil
 }
 
-func (s *UtilityService) GetDetail(id string) (*dto.UtilityResult, error) {
+func (s *UtilityServiceProvider) GetDetail(id string) (*dto.UtilityResult, error) {
 	var utility model.DormUtility
-	if err := s.app.DB.First(&utility, "id = ?", id).Error; err != nil {
+	if err := s.App.DB.First(&utility, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("水电费记录不存在")
 		}
@@ -229,8 +241,8 @@ func (s *UtilityService) GetDetail(id string) (*dto.UtilityResult, error) {
 	}, nil
 }
 
-func (s *UtilityService) Pay(req *dto.UtilityPayReq) error {
-	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+func (s *UtilityServiceProvider) Pay(req *dto.UtilityPayReq) error {
+	return s.App.DB.Transaction(func(tx *gorm.DB) error {
 		var utility model.DormUtility
 		if err := tx.First(&utility, "id = ?", req.ID).Error; err != nil {
 			return errors.New("水电费记录不存在")
@@ -242,8 +254,8 @@ func (s *UtilityService) Pay(req *dto.UtilityPayReq) error {
 	})
 }
 
-func (s *UtilityService) BatchPay(req *dto.UtilityBatchPayReq) error {
-	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+func (s *UtilityServiceProvider) BatchPay(req *dto.UtilityBatchPayReq) error {
+	return s.App.DB.Transaction(func(tx *gorm.DB) error {
 		for _, id := range req.IDs {
 			var utility model.DormUtility
 			if err := tx.First(&utility, "id = ?", id).Error; err != nil {
@@ -260,12 +272,12 @@ func (s *UtilityService) BatchPay(req *dto.UtilityBatchPayReq) error {
 	})
 }
 
-func (s *UtilityService) ImportData(reqs []*dto.UtilityImportReq) (int, error) {
+func (s *UtilityServiceProvider) ImportData(reqs []*dto.UtilityImportReq) (int, error) {
 	var successCount int
 
 	for _, req := range reqs {
 		var existCount int64
-		s.app.DB.Model(&model.DormUtility{}).Where("room_id = ? AND year = ? AND month = ?", req.RoomID, req.Year, req.Month).Count(&existCount)
+		s.App.DB.Model(&model.DormUtility{}).Where("room_id = ? AND year = ? AND month = ?", req.RoomID, req.Year, req.Month).Count(&existCount)
 		if existCount > 0 {
 			continue
 		}
@@ -281,7 +293,7 @@ func (s *UtilityService) ImportData(reqs []*dto.UtilityImportReq) (int, error) {
 			Amount:        amount,
 			PayStatus:     1,
 		}
-		if err := s.app.DB.Create(utility).Error; err == nil {
+		if err := s.App.DB.Create(utility).Error; err == nil {
 			successCount++
 		}
 	}
@@ -289,25 +301,25 @@ func (s *UtilityService) ImportData(reqs []*dto.UtilityImportReq) (int, error) {
 	return successCount, nil
 }
 
-func (s *UtilityService) UpdatePrice(req *dto.UtilityPriceReq) error {
+func (s *UtilityServiceProvider) UpdatePrice(req *dto.UtilityPriceReq) error {
 	var price model.UtilityPrice
-	s.app.DB.FirstOrCreate(&price, model.UtilityPrice{})
+	s.App.DB.FirstOrCreate(&price, model.UtilityPrice{})
 
-	return s.app.DB.Model(&price).Updates(map[string]interface{}{
+	return s.App.DB.Model(&price).Updates(map[string]interface{}{
 		"water_price":    req.WaterPrice,
 		"electric_price": req.ElectricPrice,
 	}).Error
 }
 
-func (s *UtilityService) GetPrice() (*dto.UtilityPriceResult, error) {
+func (s *UtilityServiceProvider) GetPrice() (*dto.UtilityPriceResult, error) {
 	var price model.UtilityPrice
-	if err := s.app.DB.First(&price).Error; err != nil {
+	if err := s.App.DB.First(&price).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			price = model.UtilityPrice{
 				WaterPrice:    3.5,
 				ElectricPrice: 0.6,
 			}
-			s.app.DB.Create(&price)
+			s.App.DB.Create(&price)
 		} else {
 			return nil, err
 		}
@@ -319,7 +331,7 @@ func (s *UtilityService) GetPrice() (*dto.UtilityPriceResult, error) {
 	}, nil
 }
 
-func (s *UtilityService) GetStatistics(campusID string, year, month int) (*dto.UtilityStatResult, error) {
+func (s *UtilityServiceProvider) GetStatistics(campusID string, year, month int) (*dto.UtilityStatResult, error) {
 	var results []struct {
 		TotalWaterUsage    float64
 		TotalElectricUsage float64
@@ -328,12 +340,12 @@ func (s *UtilityService) GetStatistics(campusID string, year, month int) (*dto.U
 		UnpaidAmount       float64
 	}
 
-	db := s.app.DB.Model(&model.DormUtility{})
+	db := s.App.DB.Model(&model.DormUtility{})
 
 	if campusID != "" {
 		db = db.Where("room_id IN ?",
-			s.app.DB.Model(&model.DormRoom{}).Select("id").Where("building_id IN ?",
-				s.app.DB.Model(&model.Building{}).Select("id").Where("campus_id = ?", campusID)))
+			s.App.DB.Model(&model.DormRoom{}).Select("id").Where("building_id IN ?",
+				s.App.DB.Model(&model.Building{}).Select("id").Where("campus_id = ?", campusID)))
 	}
 	if year != 0 {
 		db = db.Where("year = ?", year)
@@ -357,12 +369,12 @@ func (s *UtilityService) GetStatistics(campusID string, year, month int) (*dto.U
 	}, nil
 }
 
-func (s *UtilityService) GetUnpaidWarning() ([]*dto.UtilityResult, error) {
+func (s *UtilityServiceProvider) GetUnpaidWarning() ([]*dto.UtilityResult, error) {
 	var currentYear = time.Now().Year()
 	var currentMonth = int(time.Now().Month())
 
 	var list []*model.DormUtility
-	if err := s.app.DB.Where("year = ? AND month < ? AND pay_status = ?", currentYear, currentMonth+2, 1).Find(&list).Error; err != nil {
+	if err := s.App.DB.Where("year = ? AND month < ? AND pay_status = ?", currentYear, currentMonth+2, 1).Find(&list).Error; err != nil {
 		return nil, err
 	}
 
@@ -400,24 +412,24 @@ func (s *UtilityService) GetUnpaidWarning() ([]*dto.UtilityResult, error) {
 	return results, nil
 }
 
-func (s *UtilityService) checkRoomExists(roomID string) error {
+func (s *UtilityServiceProvider) checkRoomExists(roomID string) error {
 	var count int64
-	s.app.DB.Model(&model.DormRoom{}).Where("id = ?", roomID).Count(&count)
+	s.App.DB.Model(&model.DormRoom{}).Where("id = ?", roomID).Count(&count)
 	if count == 0 {
 		return errors.New("宿舍信息不存在")
 	}
 	return nil
 }
 
-func (s *UtilityService) calculateAmount(waterUsage, electricUsage float64) float64 {
+func (s *UtilityServiceProvider) calculateAmount(waterUsage, electricUsage float64) float64 {
 	price := s.getPriceConfig()
 	amount := waterUsage*price.WaterPrice + electricUsage*price.ElectricPrice
 	return roundToTwoDecimals(amount)
 }
 
-func (s *UtilityService) getPriceConfig() *model.UtilityPrice {
+func (s *UtilityServiceProvider) getPriceConfig() *model.UtilityPrice {
 	var price model.UtilityPrice
-	if err := s.app.DB.First(&price).Error; err != nil {
+	if err := s.App.DB.First(&price).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			price = model.UtilityPrice{
 				WaterPrice:    3.5,
@@ -428,7 +440,7 @@ func (s *UtilityService) getPriceConfig() *model.UtilityPrice {
 	return &price
 }
 
-func (s *UtilityService) getPayStatusName(status int) string {
+func (s *UtilityServiceProvider) getPayStatusName(status int) string {
 	switch status {
 	case 1:
 		return "未缴费"
@@ -439,16 +451,16 @@ func (s *UtilityService) getPayStatusName(status int) string {
 	}
 }
 
-func (s *UtilityService) GetUserDormUtility(userID string, year, month int) (*dto.PageResult, error) {
+func (s *UtilityServiceProvider) GetUserDormUtility(userID string, year, month int) (*dto.PageResult, error) {
 	var dormUser model.DormUser
-	if err := s.app.DB.Where("user_id = ? AND status = ?", userID, 1).First(&dormUser).Error; err != nil {
+	if err := s.App.DB.Where("user_id = ? AND status = ?", userID, 1).First(&dormUser).Error; err != nil {
 		return nil, errors.New("未找到用户的住宿信息")
 	}
 
 	var utilityList []*model.DormUtility
 	var total int64
 
-	db := s.app.DB.Model(&model.DormUtility{}).Where("room_id = ?", dormUser.RoomID)
+	db := s.App.DB.Model(&model.DormUtility{}).Where("room_id = ?", dormUser.RoomID)
 	if year != 0 {
 		db = db.Where("year = ?", year)
 	}
@@ -492,25 +504,25 @@ func (s *UtilityService) GetUserDormUtility(userID string, year, month int) (*dt
 	}, nil
 }
 
-func (s *UtilityService) getRoomInfo(id string) (*model.DormRoom, error) {
+func (s *UtilityServiceProvider) getRoomInfo(id string) (*model.DormRoom, error) {
 	var room model.DormRoom
-	if err := s.app.DB.First(&room, "id = ?", id).Error; err != nil {
+	if err := s.App.DB.First(&room, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &room, nil
 }
 
-func (s *UtilityService) getBuildingInfo(id string) (*model.Building, error) {
+func (s *UtilityServiceProvider) getBuildingInfo(id string) (*model.Building, error) {
 	var building model.Building
-	if err := s.app.DB.First(&building, "id = ?", id).Error; err != nil {
+	if err := s.App.DB.First(&building, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &building, nil
 }
 
-func (s *UtilityService) getCampusInfo(id string) (*model.Campus, error) {
+func (s *UtilityServiceProvider) getCampusInfo(id string) (*model.Campus, error) {
 	var campus model.Campus
-	if err := s.app.DB.First(&campus, "id = ?", id).Error; err != nil {
+	if err := s.App.DB.First(&campus, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &campus, nil

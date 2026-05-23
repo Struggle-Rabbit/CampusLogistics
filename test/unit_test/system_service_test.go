@@ -13,9 +13,9 @@ import (
 
 func TestSystemService(t *testing.T) {
 	_, appInstance := SetupTestDB()
-	svc := system.NewSystemService(appInstance)
-	menuSvc := menu.NewMenuService(appInstance)
-	userSvc := user.NewUserService(appInstance, menuSvc)
+	svc := &system.SystemServiceProvider{App: appInstance}
+	menuSvc := &menu.MenuServiceProvider{App: appInstance}
+	userSvc := &user.UserServiceProvider{App: appInstance, Menu: menuSvc}
 
 	// 先注册一个用户用于测试 Token 刷新
 	userSvc.Register(&dto.RegisterReq{

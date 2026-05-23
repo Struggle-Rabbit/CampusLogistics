@@ -8,22 +8,25 @@ import (
 	"github.com/go-viper/mapstructure/v2"
 )
 
-type RoleService struct {
-	app *app.App
+type RoleService interface {
+	CreateRole(req *dto.CreateRoleReq) error
+	UpdateRole(req *dto.UpdateRoleReq) error
+	DelRole(id []string) error
+	GetRoleList(name string) ([]dto.RoleResult, error)
+	GetRoleListByPage(req *dto.RoleListByPageReq) (*dto.PageResult, error)
+	RoleDetailById(id string) (*dto.RoleResult, error)
 }
 
-func NewRoleService(app *app.App) *RoleService {
-	return &RoleService{
-		app: app,
-	}
+type RoleServiceProvider struct {
+	App *app.App
 }
 
-func (s *RoleService) CreateRole(req *dto.CreateRoleReq) error {
+func (s *RoleServiceProvider) CreateRole(req *dto.CreateRoleReq) error {
 	var role model.SysRole
 	if err := mapstructure.Decode(req, &role); err != nil {
 		return err
 	}
-	return s.app.DB.Create(&model.SysRole{
+	return s.App.DB.Create(&model.SysRole{
 		RoleName:    req.RoleName,
 		RoleCode:    req.RoleCode,
 		Status:      req.Status,
@@ -32,8 +35,8 @@ func (s *RoleService) CreateRole(req *dto.CreateRoleReq) error {
 	}).Error
 }
 
-func (s *RoleService) UpdateRole(req *dto.UpdateRoleReq) error {
-	return s.app.DB.Model(&model.SysRole{}).Where("id = ?", req.ID).Updates(map[string]interface{}{
+func (s *RoleServiceProvider) UpdateRole(req *dto.UpdateRoleReq) error {
+	return s.App.DB.Model(&model.SysRole{}).Where("id = ?", req.ID).Updates(map[string]interface{}{
 		"role_name":   req.RoleName,
 		"role_code":   req.RoleCode,
 		"status":      req.Status,
@@ -41,22 +44,22 @@ func (s *RoleService) UpdateRole(req *dto.UpdateRoleReq) error {
 	}).Error
 }
 
-func (s *RoleService) DelRole(id []string) error {
+func (s *RoleServiceProvider) DelRole(id []string) error {
 
-	return s.app.DB.Delete(&model.SysRole{}, id).Error
+	return s.App.DB.Delete(&model.SysRole{}, id).Error
 }
 
-func (s *RoleService) GetRoleList(name string) ([]dto.RoleResult, error) {
+func (s *RoleServiceProvider) GetRoleList(name string) ([]dto.RoleResult, error) {
 	var roleSqlRes []dto.RoleResult
 
-	s.app.DB.Model(&model.SysRole{}).Where("role_name LIKE ?", "%"+name+"%").Scan(&roleSqlRes)
+	s.App.DB.Model(&model.SysRole{}).Where("role_name LIKE ?", "%"+name+"%").Scan(&roleSqlRes)
 
 	return roleSqlRes, nil
 }
 
-func (s *RoleService) GetRoleListByPage(req *dto.RoleListByPageReq) (*dto.PageResult, error) {
+func (s *RoleServiceProvider) GetRoleListByPage(req *dto.RoleListByPageReq) (*dto.PageResult, error) {
 	var total int64
-	db := s.app.DB.Model(&model.SysRole{})
+	db := s.App.DB.Model(&model.SysRole{})
 	if err := db.Count(&total).Error; err != nil {
 		return nil, err
 	}
@@ -80,10 +83,10 @@ func (s *RoleService) GetRoleListByPage(req *dto.RoleListByPageReq) (*dto.PageRe
 	}, nil
 }
 
-func (s *RoleService) RoleDetailById(id string) (*dto.RoleResult, error) {
+func (s *RoleServiceProvider) RoleDetailById(id string) (*dto.RoleResult, error) {
 	var roleResult dto.RoleResult
 
-	if err := s.app.DB.Model(&model.SysRole{}).Where("id = ?", id).First(&roleResult).Error; err != nil {
+	if err := s.App.DB.Model(&model.SysRole{}).Where("id = ?", id).First(&roleResult).Error; err != nil {
 		return nil, err
 	}
 

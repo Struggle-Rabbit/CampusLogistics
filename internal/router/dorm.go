@@ -3,12 +3,12 @@ package router
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/controller/dorm"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/middleware"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	dormsvc "github.com/Struggle-Rabbit/CampusLogistics/internal/service/dorm"
 	"github.com/gin-gonic/gin"
 )
 
-func LoadDormRouter(api *gin.RouterGroup, srv *service.ServiceProvider) {
-	dormCtl := dorm.NewDormController(srv)
+func LoadDormRouter(api *gin.RouterGroup, dormSvc dormsvc.DormService) {
+	dormCtl := &dorm.DormControllerProvider{DormSvc: dormSvc}
 
 	dormGroup := api.Group("/dorm")
 	{

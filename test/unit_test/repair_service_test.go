@@ -10,7 +10,7 @@ import (
 
 func TestRepairService(t *testing.T) {
 	_, appInstance := SetupTestDB()
-	svc := repair.NewRepairService(appInstance)
+	svc := &repair.RepairServiceProvider{App: appInstance}
 
 	var orderID string
 	userID := "STUDENT001"

@@ -2,17 +2,29 @@ package utility
 
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/utility"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
-type UtilityController struct {
-	srv *service.ServiceProvider
+type UtilityController interface {
+	Create(c *gin.Context)
+	Update(c *gin.Context)
+	Delete(c *gin.Context)
+	GetListByPage(c *gin.Context)
+	GetDetail(c *gin.Context)
+	Pay(c *gin.Context)
+	BatchPay(c *gin.Context)
+	ImportData(c *gin.Context)
+	UpdatePrice(c *gin.Context)
+	GetPrice(c *gin.Context)
+	GetStatistics(c *gin.Context)
+	GetUnpaidWarning(c *gin.Context)
+	GetUserDormUtility(c *gin.Context)
 }
 
-func NewUtilityController(srv *service.ServiceProvider) *UtilityController {
-	return &UtilityController{srv: srv}
+type UtilityControllerProvider struct {
+	UtilitySvc utility.UtilityService
 }
 
 // Create 创建水电费记录
@@ -26,13 +38,13 @@ func NewUtilityController(srv *service.ServiceProvider) *UtilityController {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/utility/create [post]
-func (s *UtilityController) Create(c *gin.Context) {
+func (s *UtilityControllerProvider) Create(c *gin.Context) {
 	var req dto.UtilityCreateReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := s.srv.UtilityService.Create(&req); err != nil {
+	if err := s.UtilitySvc.Create(&req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -50,13 +62,13 @@ func (s *UtilityController) Create(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/utility/update [post]
-func (s *UtilityController) Update(c *gin.Context) {
+func (s *UtilityControllerProvider) Update(c *gin.Context) {
 	var req dto.UtilityUpdateReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := s.srv.UtilityService.Update(&req); err != nil {
+	if err := s.UtilitySvc.Update(&req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -74,7 +86,7 @@ func (s *UtilityController) Update(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/utility/del [post]
-func (s *UtilityController) Delete(c *gin.Context) {
+func (s *UtilityControllerProvider) Delete(c *gin.Context) {
 	var data map[string]interface{}
 	if err := c.ShouldBindJSON(&data); err != nil {
 		utils.Fail(c, "参数错误")
@@ -94,7 +106,7 @@ func (s *UtilityController) Delete(c *gin.Context) {
 		}
 	}
 
-	if err := s.srv.UtilityService.Delete(idStrs); err != nil {
+	if err := s.UtilitySvc.Delete(idStrs); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -112,13 +124,13 @@ func (s *UtilityController) Delete(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/utility/list [get]
-func (s *UtilityController) GetListByPage(c *gin.Context) {
+func (s *UtilityControllerProvider) GetListByPage(c *gin.Context) {
 	var req dto.UtilityListPageReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	res, err := s.srv.UtilityService.GetListByPage(&req)
+	res, err := s.UtilitySvc.GetListByPage(&req)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -137,14 +149,14 @@ func (s *UtilityController) GetListByPage(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/utility/detail [get]
-func (s *UtilityController) GetDetail(c *gin.Context) {
+func (s *UtilityControllerProvider) GetDetail(c *gin.Context) {
 	id := c.Query("id")
 	if id == "" {
 		utils.Fail(c, "请提供记录ID")
 		return
 	}
 
-	res, err := s.srv.UtilityService.GetDetail(id)
+	res, err := s.UtilitySvc.GetDetail(id)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -163,13 +175,13 @@ func (s *UtilityController) GetDetail(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/utility/pay [post]
-func (s *UtilityController) Pay(c *gin.Context) {
+func (s *UtilityControllerProvider) Pay(c *gin.Context) {
 	var req dto.UtilityPayReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := s.srv.UtilityService.Pay(&req); err != nil {
+	if err := s.UtilitySvc.Pay(&req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -187,13 +199,13 @@ func (s *UtilityController) Pay(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/utility/batchPay [post]
-func (s *UtilityController) BatchPay(c *gin.Context) {
+func (s *UtilityControllerProvider) BatchPay(c *gin.Context) {
 	var req dto.UtilityBatchPayReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := s.srv.UtilityService.BatchPay(&req); err != nil {
+	if err := s.UtilitySvc.BatchPay(&req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -211,13 +223,13 @@ func (s *UtilityController) BatchPay(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/utility/price [post]
-func (s *UtilityController) UpdatePrice(c *gin.Context) {
+func (s *UtilityControllerProvider) UpdatePrice(c *gin.Context) {
 	var req dto.UtilityPriceReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := s.srv.UtilityService.UpdatePrice(&req); err != nil {
+	if err := s.UtilitySvc.UpdatePrice(&req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -234,8 +246,8 @@ func (s *UtilityController) UpdatePrice(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/utility/price [get]
-func (s *UtilityController) GetPrice(c *gin.Context) {
-	res, err := s.srv.UtilityService.GetPrice()
+func (s *UtilityControllerProvider) GetPrice(c *gin.Context) {
+	res, err := s.UtilitySvc.GetPrice()
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -256,7 +268,7 @@ func (s *UtilityController) GetPrice(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/utility/statistics [get]
-func (s *UtilityController) GetStatistics(c *gin.Context) {
+func (s *UtilityControllerProvider) GetStatistics(c *gin.Context) {
 	campusID := c.Query("campus_id")
 	year := 0
 	month := 0
@@ -268,7 +280,7 @@ func (s *UtilityController) GetStatistics(c *gin.Context) {
 		month = utils.StrToInt(m)
 	}
 
-	res, err := s.srv.UtilityService.GetStatistics(campusID, year, month)
+	res, err := s.UtilitySvc.GetStatistics(campusID, year, month)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -286,8 +298,8 @@ func (s *UtilityController) GetStatistics(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/utility/warning [get]
-func (s *UtilityController) GetUnpaidWarning(c *gin.Context) {
-	res, err := s.srv.UtilityService.GetUnpaidWarning()
+func (s *UtilityControllerProvider) GetUnpaidWarning(c *gin.Context) {
+	res, err := s.UtilitySvc.GetUnpaidWarning()
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -307,7 +319,7 @@ func (s *UtilityController) GetUnpaidWarning(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/utility/myUtility [get]
-func (s *UtilityController) GetUserDormUtility(c *gin.Context) {
+func (s *UtilityControllerProvider) GetUserDormUtility(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	year := 0
 	month := 0
@@ -319,7 +331,7 @@ func (s *UtilityController) GetUserDormUtility(c *gin.Context) {
 		month = utils.StrToInt(m)
 	}
 
-	res, err := s.srv.UtilityService.GetUserDormUtility(userID.(string), year, month)
+	res, err := s.UtilitySvc.GetUserDormUtility(userID.(string), year, month)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return

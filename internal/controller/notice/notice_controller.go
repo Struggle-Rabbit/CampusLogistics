@@ -2,17 +2,23 @@ package notice
 
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/notice"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
-type NoticeController struct {
-	srv *service.ServiceProvider
+type NoticeController interface {
+	Create(c *gin.Context)
+	Update(c *gin.Context)
+	Delete(c *gin.Context)
+	GetListByPage(c *gin.Context)
+	GetPublicList(c *gin.Context)
+	GetDetail(c *gin.Context)
+	SetTop(c *gin.Context)
 }
 
-func NewNoticeController(srv *service.ServiceProvider) *NoticeController {
-	return &NoticeController{srv: srv}
+type NoticeControllerProvider struct {
+	NoticeSvc notice.NoticeService
 }
 
 // Create 创建公告
@@ -26,14 +32,14 @@ func NewNoticeController(srv *service.ServiceProvider) *NoticeController {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/notice/create [post]
-func (ctl *NoticeController) Create(c *gin.Context) {
+func (s *NoticeControllerProvider) Create(c *gin.Context) {
 	var req dto.NoticeCreateReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
 	userID, _ := c.Get("user_id")
-	if err := ctl.srv.NoticeService.Create(userID.(string), &req); err != nil {
+	if err := s.NoticeSvc.Create(userID.(string), &req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -51,13 +57,13 @@ func (ctl *NoticeController) Create(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/notice/update [post]
-func (ctl *NoticeController) Update(c *gin.Context) {
+func (s *NoticeControllerProvider) Update(c *gin.Context) {
 	var req dto.NoticeUpdateReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := ctl.srv.NoticeService.Update(&req); err != nil {
+	if err := s.NoticeSvc.Update(&req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -75,7 +81,7 @@ func (ctl *NoticeController) Update(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/notice/del [post]
-func (ctl *NoticeController) Delete(c *gin.Context) {
+func (s *NoticeControllerProvider) Delete(c *gin.Context) {
 	var data map[string]interface{}
 	if err := c.ShouldBindJSON(&data); err != nil {
 		utils.Fail(c, "参数错误")
@@ -95,7 +101,7 @@ func (ctl *NoticeController) Delete(c *gin.Context) {
 		}
 	}
 
-	if err := ctl.srv.NoticeService.Delete(idStrs); err != nil {
+	if err := s.NoticeSvc.Delete(idStrs); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -113,13 +119,13 @@ func (ctl *NoticeController) Delete(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/notice/list [get]
-func (ctl *NoticeController) GetListByPage(c *gin.Context) {
+func (s *NoticeControllerProvider) GetListByPage(c *gin.Context) {
 	var req dto.NoticeListPageReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	res, err := ctl.srv.NoticeService.GetListByPage(&req)
+	res, err := s.NoticeSvc.GetListByPage(&req)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -138,13 +144,13 @@ func (ctl *NoticeController) GetListByPage(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/notice/public [get]
-func (ctl *NoticeController) GetPublicList(c *gin.Context) {
+func (s *NoticeControllerProvider) GetPublicList(c *gin.Context) {
 	var req dto.NoticeListPageReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	res, err := ctl.srv.NoticeService.GetPublicList(&req)
+	res, err := s.NoticeSvc.GetPublicList(&req)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -163,14 +169,14 @@ func (ctl *NoticeController) GetPublicList(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/notice/detail [get]
-func (ctl *NoticeController) GetDetail(c *gin.Context) {
+func (s *NoticeControllerProvider) GetDetail(c *gin.Context) {
 	id := c.Query("id")
 	if id == "" {
 		utils.Fail(c, "请提供公告ID")
 		return
 	}
 
-	res, err := ctl.srv.NoticeService.GetDetail(id)
+	res, err := s.NoticeSvc.GetDetail(id)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -189,13 +195,13 @@ func (ctl *NoticeController) GetDetail(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/notice/top [post]
-func (ctl *NoticeController) SetTop(c *gin.Context) {
+func (s *NoticeControllerProvider) SetTop(c *gin.Context) {
 	var req dto.NoticeTopReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := ctl.srv.NoticeService.SetTop(&req); err != nil {
+	if err := s.NoticeSvc.SetTop(&req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}

@@ -10,17 +10,16 @@ import (
 	"gorm.io/gorm"
 )
 
-type SystemService struct {
-	app *app.App
+type SystemService interface {
+	RefreshToken(token string) (*dto.RefreshTokenResult, error)
+	GetOperationLogListByPage(req *dto.OperationLogByPageReq) (*dto.PageResult, error)
 }
 
-func NewSystemService(app *app.App) *SystemService {
-	return &SystemService{
-		app: app,
-	}
+type SystemServiceProvider struct {
+	App *app.App
 }
 
-func (s *SystemService) RefreshToken(token string) (*dto.RefreshTokenResult, error) {
+func (s *SystemServiceProvider) RefreshToken(token string) (*dto.RefreshTokenResult, error) {
 	info, err := utils.ParseToken(token)
 	if err != nil {
 		return nil, err
@@ -28,7 +27,7 @@ func (s *SystemService) RefreshToken(token string) (*dto.RefreshTokenResult, err
 
 	var sysUser model.SysUser
 
-	if err := s.app.DB.Model(&model.SysUser{}).Where("id = ?", info.UserID).First(&sysUser).Error; err != nil {
+	if err := s.App.DB.Model(&model.SysUser{}).Where("id = ?", info.UserID).First(&sysUser).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("未查询到用户信息")
 		} else {
@@ -40,15 +39,19 @@ func (s *SystemService) RefreshToken(token string) (*dto.RefreshTokenResult, err
 		return nil, errors.New("RefreshToken无效")
 	}
 
-	accessToken, _, err := utils.GenerateToken(sysUser.ID, sysUser.Name)
-
+	accessToken, refreshToken, err := utils.GenerateToken(sysUser.ID, sysUser.Name)
 	if err != nil {
 		return nil, err
 	}
 
+	// 使用主键更新 refresh_token，避免 SQLite UPDATE...FROM 自引用歧义
+	if err := s.App.DB.Model(&sysUser).Update("refresh_token", refreshToken).Error; err != nil {
+		return nil, err
+	}
+
 	return &dto.RefreshTokenResult{
-		AccessToken: accessToken,
-		// RefreshToken: refreshToken,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}, nil
 
 }

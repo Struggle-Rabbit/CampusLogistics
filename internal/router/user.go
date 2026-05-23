@@ -3,12 +3,12 @@ package router
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/controller/user"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/middleware"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	usersvc "github.com/Struggle-Rabbit/CampusLogistics/internal/service/user"
 	"github.com/gin-gonic/gin"
 )
 
-func LoadUserRouter(api *gin.RouterGroup, srv *service.ServiceProvider) {
-	userCtl := user.NewUserController(srv)
+func LoadUserRouter(api *gin.RouterGroup, userSvc usersvc.UserService) {
+	userCtl := &user.UserControllerProvider{UserSvc: userSvc}
 
 	user := api.Group("/user")
 	{

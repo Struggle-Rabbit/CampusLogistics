@@ -6,9 +6,9 @@ import (
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
 )
 
-func (s *SystemService) GetOperationLogListByPage(req *dto.OperationLogByPageReq) (*dto.PageResult, error) {
+func (s *SystemServiceProvider) GetOperationLogListByPage(req *dto.OperationLogByPageReq) (*dto.PageResult, error) {
 	var total int64
-	db := s.app.DB.Model(&model.SysOperationLog{})
+	db := s.App.DB.Model(&model.SysOperationLog{})
 
 	if err := db.Count(&total).Error; err != nil {
 		return nil, err

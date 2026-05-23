@@ -3,12 +3,12 @@ package router
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/controller/role"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/middleware"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	rolesvc "github.com/Struggle-Rabbit/CampusLogistics/internal/service/role"
 	"github.com/gin-gonic/gin"
 )
 
-func LoadRoleRouter(api *gin.RouterGroup, srv *service.ServiceProvider) {
-	roleCtl := role.NewRoleController(srv)
+func LoadRoleRouter(api *gin.RouterGroup, roleSvc rolesvc.RoleService) {
+	roleCtl := &role.RoleControllerProvider{RoleSvc: roleSvc}
 
 	user := api.Group("/role")
 	{

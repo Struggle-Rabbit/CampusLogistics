@@ -2,19 +2,20 @@ package common
 
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/user"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
-type CommonController struct {
-	srv *service.ServiceProvider
+// CommonController 通用控制器接口
+type CommonController interface {
+	Login(c *gin.Context)
+	Register(c *gin.Context)
 }
 
-func NewCommonController(srv *service.ServiceProvider) *CommonController {
-	return &CommonController{
-		srv: srv,
-	}
+// CommonControllerProvider 通用控制器实现
+type CommonControllerProvider struct {
+	UserSvc user.UserService
 }
 
 // Login 用户登录
@@ -27,18 +28,18 @@ func NewCommonController(srv *service.ServiceProvider) *CommonController {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/login [post]
-func (uCtl *CommonController) Login(c *gin.Context) {
+func (c *CommonControllerProvider) Login(ctx *gin.Context) {
 	var req dto.LoginReq
 
-	if isValidate := utils.ShouldBind(c, &req); isValidate {
-		res, err := uCtl.srv.UserService.Login(&req)
+	if isValidate := utils.ShouldBind(ctx, &req); isValidate {
+		res, err := c.UserSvc.Login(&req)
 
 		if err != nil {
-			utils.Fail(c, err.Error())
+			utils.Fail(ctx, err.Error())
 			return
 		}
 
-		utils.Success(c, res, "登录成功")
+		utils.Success(ctx, res, "登录成功")
 		return
 	}
 }
@@ -53,18 +54,18 @@ func (uCtl *CommonController) Login(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/register [post]
-func (uCtl *CommonController) Register(c *gin.Context) {
+func (c *CommonControllerProvider) Register(ctx *gin.Context) {
 	var req dto.RegisterReq
 
-	if isValidate := utils.ShouldBind(c, &req); isValidate {
-		err := uCtl.srv.UserService.Register(&req)
+	if isValidate := utils.ShouldBind(ctx, &req); isValidate {
+		err := c.UserSvc.Register(&req)
 
 		if err != nil {
-			utils.Fail(c, err.Error())
+			utils.Fail(ctx, err.Error())
 			return
 		}
 
-		utils.Success(c, "注册成功")
+		utils.Success(ctx, "注册成功")
 		return
 
 	}

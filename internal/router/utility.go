@@ -3,12 +3,12 @@ package router
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/controller/utility"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/middleware"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	utilitySvc "github.com/Struggle-Rabbit/CampusLogistics/internal/service/utility"
 	"github.com/gin-gonic/gin"
 )
 
-func LoadUtilityRouter(api *gin.RouterGroup, srv *service.ServiceProvider) {
-	utilityCtl := utility.NewUtilityController(srv)
+func LoadUtilityRouter(api *gin.RouterGroup, utilitySvc utilitySvc.UtilityService) {
+	utilityCtl := &utility.UtilityControllerProvider{UtilitySvc: utilitySvc}
 
 	utilityGroup := api.Group("/utility")
 	{

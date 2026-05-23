@@ -16,23 +16,27 @@ import (
 	"gorm.io/gorm"
 )
 
-// UserService 用户服务
-type UserService struct {
-	app  *app.App
-	menu *menu.MenuService
+// UserService 用户服务接口
+type UserService interface {
+	Register(req *dto.RegisterReq) error
+	Login(req *dto.LoginReq) (*dto.LoginResult, error)
+	GetUserInfo(c *gin.Context) (*dto.UserInfoResult, error)
+	GetListByPage(req *dto.UserListPageReq) (*dto.PageResult, error)
+	UpdateUser(req *dto.UserUpdateReq) error
+	DelUser(id []string) error
+	ResetPassword(req *dto.PasswordReset) error
+	GetUserPermission(user_id string) (*dto.UserPermissionResult, error)
 }
 
-// NewUserService 创建用户服务实例
-func NewUserService(app *app.App, menuSvc *menu.MenuService) *UserService {
-	return &UserService{
-		app:  app,
-		menu: menuSvc,
-	}
+// UserServiceProvider 用户服务实现
+type UserServiceProvider struct {
+	App  *app.App
+	Menu menu.MenuService
 }
 
 // Register 用户注册
-func (s *UserService) Register(req *dto.RegisterReq) error {
-	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+func (s *UserServiceProvider) Register(req *dto.RegisterReq) error {
+	return s.App.DB.Transaction(func(tx *gorm.DB) error {
 		// 检查是否已存在
 		var total int64
 		if err := tx.Model(&model.SysUser{}).Where("mobile = ?", req.Mobile).Count(&total).Error; err != nil {
@@ -63,29 +67,27 @@ func (s *UserService) Register(req *dto.RegisterReq) error {
 	})
 }
 
-func (s *UserService) Login(req *dto.LoginReq) (*dto.LoginResult, error) {
+func (s *UserServiceProvider) Login(req *dto.LoginReq) (*dto.LoginResult, error) {
 	var sysUser model.SysUser
-	db := s.app.DB.Model(&model.SysUser{}).Where("mobile = ? OR user_code = ?", req.Account, req.Account)
-	if err := db.First(&sysUser).Error; err == nil {
-		// 密码校验
-		if err := utils.VerifyPasswordFunc(sysUser.Password, req.Password); err != nil {
+	if err := s.App.DB.Model(&model.SysUser{}).Where("mobile = ? OR user_code = ?", req.Account, req.Account).First(&sysUser).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("账号密码不正确")
 		}
-	} else {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
-		} else {
-			return nil, errors.New("账号密码不正确")
-		}
+		return nil, err
+	}
+
+	// 密码校验
+	if err := utils.VerifyPasswordFunc(sysUser.Password, req.Password); err != nil {
+		return nil, errors.New("账号密码不正确")
 	}
 
 	accessToken, refreshToken, err := utils.GenerateToken(sysUser.ID, sysUser.Name)
-
 	if err != nil {
 		return nil, err
 	}
 
-	if err := db.Update("refresh_token", refreshToken).Error; err != nil {
+	// 使用主键更新 refresh_token，避免 SQLite UPDATE...FROM 自引用歧义
+	if err := s.App.DB.Model(&sysUser).Update("refresh_token", refreshToken).Error; err != nil {
 		return nil, err
 	}
 
@@ -95,11 +97,11 @@ func (s *UserService) Login(req *dto.LoginReq) (*dto.LoginResult, error) {
 	}, nil
 }
 
-func (s *UserService) GetUserInfo(c *gin.Context) (*dto.UserInfoResult, error) {
+func (s *UserServiceProvider) GetUserInfo(c *gin.Context) (*dto.UserInfoResult, error) {
 	userId, exists := c.Get("userID")
 	var sysUser dto.UserInfoResult
 	if exists {
-		err := s.app.DB.First(&sysUser, userId).Error
+		err := s.App.DB.First(&sysUser, userId).Error
 		if err == nil {
 			return &sysUser, nil
 		}
@@ -113,10 +115,10 @@ func (s *UserService) GetUserInfo(c *gin.Context) (*dto.UserInfoResult, error) {
 	return nil, errors.New("未获取到UserID")
 }
 
-func (s *UserService) GetListByPage(req *dto.UserListPageReq) (*dto.PageResult, error) {
+func (s *UserServiceProvider) GetListByPage(req *dto.UserListPageReq) (*dto.PageResult, error) {
 	var list []*model.SysUser
 	var total int64
-	db := s.app.DB.Model(&model.SysUser{})
+	db := s.App.DB.Model(&model.SysUser{})
 
 	if req.Mobile != "" {
 		db.Where("mobile = ?", req.Mobile)
@@ -177,13 +179,13 @@ func (s *UserService) GetListByPage(req *dto.UserListPageReq) (*dto.PageResult, 
 	}, nil
 }
 
-func (s *UserService) UpdateUser(req *dto.UserUpdateReq) error {
+func (s *UserServiceProvider) UpdateUser(req *dto.UserUpdateReq) error {
 	if req.ID == "" {
 		return errors.New("id不能为空")
 	}
 	if req.Mobile != "" {
 		var user model.SysUser
-		if err := s.app.DB.Where("mobile = ? AND id != ?", req.Mobile, req.ID).First(&user).Error; err != nil {
+		if err := s.App.DB.Where("mobile = ? AND id != ?", req.Mobile, req.ID).First(&user).Error; err != nil {
 			if !errors.Is(err, gorm.ErrRecordNotFound) {
 				return err
 			}
@@ -191,7 +193,7 @@ func (s *UserService) UpdateUser(req *dto.UserUpdateReq) error {
 			return errors.New("此手机号已被使用")
 		}
 	}
-	return s.app.DB.Model(&model.SysUser{}).Where("id = ?", req.ID).Updates(model.SysUser{
+	return s.App.DB.Model(&model.SysUser{}).Where("id = ?", req.ID).Updates(model.SysUser{
 		Name:     req.Name,
 		Mobile:   req.Mobile,
 		Status:   req.Status,
@@ -200,16 +202,16 @@ func (s *UserService) UpdateUser(req *dto.UserUpdateReq) error {
 	}).Error
 }
 
-func (s *UserService) DelUser(id []string) error {
+func (s *UserServiceProvider) DelUser(id []string) error {
 
-	return s.app.DB.Delete(&model.SysUser{}, id).Error
+	return s.App.DB.Delete(&model.SysUser{}, id).Error
 }
 
 // ResetPassword 重置密码
-func (s *UserService) ResetPassword(req *dto.PasswordReset) error {
+func (s *UserServiceProvider) ResetPassword(req *dto.PasswordReset) error {
 	var user model.SysUser
 	// 查找用户
-	err := s.app.DB.Where("mobile = ?", req.Mobile).First(&user).Error
+	err := s.App.DB.Where("mobile = ?", req.Mobile).First(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("用户不存在")
@@ -229,12 +231,12 @@ func (s *UserService) ResetPassword(req *dto.PasswordReset) error {
 	}
 
 	// 更新密码
-	return s.app.DB.Model(&user).Update("password", hashedPassword).Error
+	return s.App.DB.Model(&user).Update("password", hashedPassword).Error
 }
 
-func (s *UserService) GetUserPermission(user_id string) (*dto.UserPermissionResult, error) {
+func (s *UserServiceProvider) GetUserPermission(user_id string) (*dto.UserPermissionResult, error) {
 	var sysUser model.SysUser
-	err := s.app.DB.Preload("Roles").Preload("Roles.Menus").First(&sysUser, "id = ?", user_id).Error
+	err := s.App.DB.Preload("Roles").Preload("Roles.Menus").First(&sysUser, "id = ?", user_id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("用户不存在")
@@ -279,6 +281,6 @@ func (s *UserService) GetUserPermission(user_id string) (*dto.UserPermissionResu
 		RoleIDs: roleIds,
 		Roles:   roleRes,
 		MenuIDs: menuIds,
-		Menus:   s.menu.BuildMenuTree(menuList),
+		Menus:   s.Menu.BuildMenuTree(menuList),
 	}, nil
 }

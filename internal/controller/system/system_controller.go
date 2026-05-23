@@ -2,19 +2,18 @@ package system
 
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/system"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
-type SystemController struct {
-	srv *service.ServiceProvider
+type SystemController interface {
+	GetOperationLogListByPage(c *gin.Context)
+	RefreshToken(c *gin.Context)
 }
 
-func NewSystemController(srv *service.ServiceProvider) *SystemController {
-	return &SystemController{
-		srv: srv,
-	}
+type SystemControllerProvider struct {
+	SystemSvc system.SystemService
 }
 
 // GetOperationLogListByPage 操作日志查询
@@ -27,13 +26,13 @@ func NewSystemController(srv *service.ServiceProvider) *SystemController {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/OperationLogList [get]
-func (s *SystemController) GetOperationLogListByPage(c *gin.Context) {
+func (s *SystemControllerProvider) GetOperationLogListByPage(c *gin.Context) {
 	var optLogReq dto.OperationLogByPageReq
 	if !utils.ShouldBind(c, &optLogReq) {
 		return
 	}
 
-	res, err := s.srv.SystemService.GetOperationLogListByPage(&optLogReq)
+	res, err := s.SystemSvc.GetOperationLogListByPage(&optLogReq)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -51,14 +50,14 @@ func (s *SystemController) GetOperationLogListByPage(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/RefreshToken [get]
-func (s *SystemController) RefreshToken(c *gin.Context) {
+func (s *SystemControllerProvider) RefreshToken(c *gin.Context) {
 	refresh_token, isExistence := c.GetQuery("refresh_token")
 	if !isExistence {
 		utils.Fail(c, "token参数为必填")
 		return
 	}
 
-	res, err := s.srv.SystemService.RefreshToken(refresh_token)
+	res, err := s.SystemSvc.RefreshToken(refresh_token)
 	if err != nil {
 		utils.Unauth(c, "token过期或无效")
 		return

@@ -2,19 +2,25 @@ package user
 
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/user"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
-type UserController struct {
-	srv *service.ServiceProvider
+// UserController 用户控制器接口
+type UserController interface {
+	CreateUser(c *gin.Context)
+	UpdateUser(c *gin.Context)
+	GetUserList(c *gin.Context)
+	GetUserInfo(c *gin.Context)
+	DeleteUser(c *gin.Context)
+	ResetPassword(c *gin.Context)
+	GetUserPermission(c *gin.Context)
 }
 
-func NewUserController(srv *service.ServiceProvider) *UserController {
-	return &UserController{
-		srv: srv,
-	}
+// UserControllerProvider 用户控制器实现
+type UserControllerProvider struct {
+	UserSvc user.UserService
 }
 
 // DelUser 用户删除
@@ -27,7 +33,7 @@ func NewUserController(srv *service.ServiceProvider) *UserController {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/user/del [post]
-func (s *UserController) DelUser(c *gin.Context) {
+func (s *UserControllerProvider) DelUser(c *gin.Context) {
 	var data map[string]interface{}
 
 	if err := c.ShouldBindJSON(&data); err != nil {
@@ -40,7 +46,7 @@ func (s *UserController) DelUser(c *gin.Context) {
 		utils.Fail(c, "请选择要删除的数据")
 		return
 	}
-	if err := s.srv.UserService.DelUser(id); err != nil {
+	if err := s.UserSvc.DelUser(id); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -57,13 +63,13 @@ func (s *UserController) DelUser(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/user/listPage [post]
-func (s *UserController) UpdateUser(c *gin.Context) {
+func (s *UserControllerProvider) UpdateUser(c *gin.Context) {
 	var userReq dto.UserUpdateReq
 	if !utils.ShouldBind(c, &userReq) {
 		return
 	}
 
-	if err := s.srv.UserService.UpdateUser(&userReq); err != nil {
+	if err := s.UserSvc.UpdateUser(&userReq); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -80,13 +86,13 @@ func (s *UserController) UpdateUser(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/user/resetPassword [post]
-func (s *UserController) ResetPassword(c *gin.Context) {
+func (s *UserControllerProvider) ResetPassword(c *gin.Context) {
 	var resetReq dto.PasswordReset
 	if !utils.ShouldBind(c, &resetReq) {
 		return
 	}
 
-	if err := s.srv.UserService.ResetPassword(&resetReq); err != nil {
+	if err := s.UserSvc.ResetPassword(&resetReq); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -103,13 +109,13 @@ func (s *UserController) ResetPassword(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/user/listPage [get]
-func (s *UserController) GetListByPage(c *gin.Context) {
+func (s *UserControllerProvider) GetListByPage(c *gin.Context) {
 	var userReq dto.UserListPageReq
 	if !utils.ShouldBind(c, &userReq) {
 		return
 	}
 
-	res, err := s.srv.UserService.GetListByPage(&userReq)
+	res, err := s.UserSvc.GetListByPage(&userReq)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -127,8 +133,8 @@ func (s *UserController) GetListByPage(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/user/detail [get]
-func (s *UserController) QueryDetail(c *gin.Context) {
-	res, err := s.srv.UserService.GetUserInfo(c)
+func (s *UserControllerProvider) QueryDetail(c *gin.Context) {
+	res, err := s.UserSvc.GetUserInfo(c)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -145,9 +151,9 @@ func (s *UserController) QueryDetail(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/user/getUserPermission [get]
-func (s *UserController) GetUserPermission(c *gin.Context) {
+func (s *UserControllerProvider) GetUserPermission(c *gin.Context) {
 	userId, _ := c.Get("user_id")
-	res, err := s.srv.UserService.GetUserPermission(userId.(string))
+	res, err := s.UserSvc.GetUserPermission(userId.(string))
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return

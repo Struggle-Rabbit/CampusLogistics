@@ -2,17 +2,22 @@ package campus
 
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/campus"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
-type CampusController struct {
-	srv *service.ServiceProvider
+type CampusController interface {
+	Create(c *gin.Context)
+	Update(c *gin.Context)
+	Delete(c *gin.Context)
+	GetListByPage(c *gin.Context)
+	GetDetail(c *gin.Context)
+	GetAll(c *gin.Context)
 }
 
-func NewCampusController(srv *service.ServiceProvider) *CampusController {
-	return &CampusController{srv: srv}
+type CampusControllerProvider struct {
+	CampusSvc campus.CampusService
 }
 
 // Create 创建校区
@@ -26,13 +31,13 @@ func NewCampusController(srv *service.ServiceProvider) *CampusController {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/campus/create [post]
-func (s *CampusController) Create(c *gin.Context) {
+func (s *CampusControllerProvider) Create(c *gin.Context) {
 	var req dto.CampusCreateReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := s.srv.CampusService.Create(&req); err != nil {
+	if err := s.CampusSvc.Create(&req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -50,13 +55,13 @@ func (s *CampusController) Create(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/campus/update [post]
-func (s *CampusController) Update(c *gin.Context) {
+func (s *CampusControllerProvider) Update(c *gin.Context) {
 	var req dto.CampusUpdateReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := s.srv.CampusService.Update(&req); err != nil {
+	if err := s.CampusSvc.Update(&req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -74,7 +79,7 @@ func (s *CampusController) Update(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/campus/del [post]
-func (s *CampusController) Delete(c *gin.Context) {
+func (s *CampusControllerProvider) Delete(c *gin.Context) {
 	var data map[string]interface{}
 	if err := c.ShouldBindJSON(&data); err != nil {
 		utils.Fail(c, "参数错误")
@@ -94,7 +99,7 @@ func (s *CampusController) Delete(c *gin.Context) {
 		}
 	}
 
-	if err := s.srv.CampusService.Delete(idStrs); err != nil {
+	if err := s.CampusSvc.Delete(idStrs); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -112,13 +117,13 @@ func (s *CampusController) Delete(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/campus/list [get]
-func (s *CampusController) GetListByPage(c *gin.Context) {
+func (s *CampusControllerProvider) GetListByPage(c *gin.Context) {
 	var req dto.CampusListPageReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	res, err := s.srv.CampusService.GetListByPage(&req)
+	res, err := s.CampusSvc.GetListByPage(&req)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -137,14 +142,14 @@ func (s *CampusController) GetListByPage(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/campus/detail [get]
-func (s *CampusController) GetDetail(c *gin.Context) {
+func (s *CampusControllerProvider) GetDetail(c *gin.Context) {
 	id := c.Query("id")
 	if id == "" {
 		utils.Fail(c, "请提供校区ID")
 		return
 	}
 
-	res, err := s.srv.CampusService.GetDetail(id)
+	res, err := s.CampusSvc.GetDetail(id)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -162,8 +167,8 @@ func (s *CampusController) GetDetail(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/campus/all [get]
-func (s *CampusController) GetAll(c *gin.Context) {
-	res, err := s.srv.CampusService.GetAll()
+func (s *CampusControllerProvider) GetAll(c *gin.Context) {
+	res, err := s.CampusSvc.GetAll()
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return

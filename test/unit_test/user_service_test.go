@@ -12,8 +12,8 @@ import (
 
 func TestUserService_Register(t *testing.T) {
 	_, appInstance := SetupTestDB()
-	menuSvc := menu.NewMenuService(appInstance)
-	svc := user.NewUserService(appInstance, menuSvc)
+	menuSvc := &menu.MenuServiceProvider{App: appInstance}
+	svc := &user.UserServiceProvider{App: appInstance, Menu: menuSvc}
 
 	t.Run("成功注册", func(t *testing.T) {
 		req := &dto.RegisterReq{
@@ -34,8 +34,8 @@ func TestUserService_Register(t *testing.T) {
 
 func TestUserService_Login(t *testing.T) {
 	_, appInstance := SetupTestDB()
-	menuSvc := menu.NewMenuService(appInstance)
-	svc := user.NewUserService(appInstance, menuSvc)
+	menuSvc := &menu.MenuServiceProvider{App: appInstance}
+	svc := &user.UserServiceProvider{App: appInstance, Menu: menuSvc}
 
 	// 先注册
 	regReq := &dto.RegisterReq{
@@ -71,8 +71,8 @@ func TestUserService_Login(t *testing.T) {
 
 func TestUserService_ResetPassword(t *testing.T) {
 	_, appInstance := SetupTestDB()
-	menuSvc := menu.NewMenuService(appInstance)
-	svc := user.NewUserService(appInstance, menuSvc)
+	menuSvc := &menu.MenuServiceProvider{App: appInstance}
+	svc := &user.UserServiceProvider{App: appInstance, Menu: menuSvc}
 
 	// 先注册
 	mobile := "13700137000"

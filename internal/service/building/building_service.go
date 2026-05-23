@@ -15,15 +15,22 @@ import (
 	"gorm.io/gorm"
 )
 
-type BuildingService struct {
-	app *app.App
+type BuildingService interface {
+	Create(req *dto.BuildingCreateReq) error
+	Update(req *dto.BuildingUpdateReq) error
+	Delete(ids []string) error
+	GetListByPage(req *dto.BuildingListPageReq) (*dto.PageResult, error)
+	GetDetail(id string) (*dto.BuildingResult, error)
+	GetBuildingsByCampus(campusID string) ([]*dto.BuildingResult, error)
+	ImportBuildings(file *multipart.FileHeader) (int, error)
+	ExportBuildings(req *dto.BuildingExportReq) (string, error)
 }
 
-func NewBuildingService(app *app.App) *BuildingService {
-	return &BuildingService{app: app}
+type BuildingServiceProvider struct {
+	App *app.App
 }
 
-func (s *BuildingService) Create(req *dto.BuildingCreateReq) error {
+func (s *BuildingServiceProvider) Create(req *dto.BuildingCreateReq) error {
 	if err := s.checkBuildingNoUnique("", req.BuildingNo); err != nil {
 		return err
 	}
@@ -39,10 +46,10 @@ func (s *BuildingService) Create(req *dto.BuildingCreateReq) error {
 		RoomCount:    req.RoomCount,
 		Remark:       req.Remark,
 	}
-	return s.app.DB.Create(building).Error
+	return s.App.DB.Create(building).Error
 }
 
-func (s *BuildingService) Update(req *dto.BuildingUpdateReq) error {
+func (s *BuildingServiceProvider) Update(req *dto.BuildingUpdateReq) error {
 	if err := s.checkBuildingNoUnique(req.ID, req.BuildingNo); err != nil {
 		return err
 	}
@@ -50,7 +57,7 @@ func (s *BuildingService) Update(req *dto.BuildingUpdateReq) error {
 		return err
 	}
 
-	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+	return s.App.DB.Transaction(func(tx *gorm.DB) error {
 		var building model.Building
 		if err := tx.First(&building, "id = ?", req.ID).Error; err != nil {
 			return errors.New("楼栋信息不存在")
@@ -65,8 +72,8 @@ func (s *BuildingService) Update(req *dto.BuildingUpdateReq) error {
 	})
 }
 
-func (s *BuildingService) Delete(ids []string) error {
-	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+func (s *BuildingServiceProvider) Delete(ids []string) error {
+	return s.App.DB.Transaction(func(tx *gorm.DB) error {
 		var count int64
 		if err := tx.Model(&model.DormRoom{}).Where("building_id IN ?", ids).Count(&count).Error; err != nil {
 			return err
@@ -78,10 +85,10 @@ func (s *BuildingService) Delete(ids []string) error {
 	})
 }
 
-func (s *BuildingService) GetListByPage(req *dto.BuildingListPageReq) (*dto.PageResult, error) {
+func (s *BuildingServiceProvider) GetListByPage(req *dto.BuildingListPageReq) (*dto.PageResult, error) {
 	var list []*model.Building
 	var total int64
-	db := s.app.DB.Model(&model.Building{})
+	db := s.App.DB.Model(&model.Building{})
 
 	if req.CampusID != "" {
 		db = db.Where("campus_id = ?", req.CampusID)
@@ -105,12 +112,12 @@ func (s *BuildingService) GetListByPage(req *dto.BuildingListPageReq) (*dto.Page
 	for _, v := range list {
 		var campus model.Campus
 		campusName := ""
-		if err := s.app.DB.First(&campus, "id = ?", v.CampusID).Error; err == nil {
+		if err := s.App.DB.First(&campus, "id = ?", v.CampusID).Error; err == nil {
 			campusName = campus.CampusName
 		}
 
 		var roomUsedCount int64
-		s.app.DB.Model(&model.DormRoom{}).Where("building_id = ?", v.ID).Count(&roomUsedCount)
+		s.App.DB.Model(&model.DormRoom{}).Where("building_id = ?", v.ID).Count(&roomUsedCount)
 
 		results = append(results, &dto.BuildingResult{
 			ID:            v.ID,
@@ -133,9 +140,9 @@ func (s *BuildingService) GetListByPage(req *dto.BuildingListPageReq) (*dto.Page
 	}, nil
 }
 
-func (s *BuildingService) GetDetail(id string) (*dto.BuildingResult, error) {
+func (s *BuildingServiceProvider) GetDetail(id string) (*dto.BuildingResult, error) {
 	var building model.Building
-	if err := s.app.DB.First(&building, "id = ?", id).Error; err != nil {
+	if err := s.App.DB.First(&building, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("楼栋信息不存在")
 		}
@@ -144,12 +151,12 @@ func (s *BuildingService) GetDetail(id string) (*dto.BuildingResult, error) {
 
 	var campus model.Campus
 	campusName := ""
-	if err := s.app.DB.First(&campus, "id = ?", building.CampusID).Error; err == nil {
+	if err := s.App.DB.First(&campus, "id = ?", building.CampusID).Error; err == nil {
 		campusName = campus.CampusName
 	}
 
 	var roomUsedCount int64
-	s.app.DB.Model(&model.DormRoom{}).Where("building_id = ?", building.ID).Count(&roomUsedCount)
+	s.App.DB.Model(&model.DormRoom{}).Where("building_id = ?", building.ID).Count(&roomUsedCount)
 
 	return &dto.BuildingResult{
 		ID:            building.ID,
@@ -164,7 +171,7 @@ func (s *BuildingService) GetDetail(id string) (*dto.BuildingResult, error) {
 	}, nil
 }
 
-func (s *BuildingService) ImportBuildings(file *multipart.FileHeader) (int, error) {
+func (s *BuildingServiceProvider) ImportBuildings(file *multipart.FileHeader) (int, error) {
 	src, err := file.Open()
 	if err != nil {
 		return 0, err
@@ -200,7 +207,7 @@ func (s *BuildingService) ImportBuildings(file *multipart.FileHeader) (int, erro
 		campusID, ok := campusCache[campusName]
 		if !ok {
 			var campus model.Campus
-			if err := s.app.DB.Where("campus_name = ?", campusName).First(&campus).Error; err != nil {
+			if err := s.App.DB.Where("campus_name = ?", campusName).First(&campus).Error; err != nil {
 				continue
 			}
 			campusID = campus.ID
@@ -208,7 +215,7 @@ func (s *BuildingService) ImportBuildings(file *multipart.FileHeader) (int, erro
 		}
 
 		var existCount int64
-		s.app.DB.Model(&model.Building{}).Where("building_no = ?", buildingNo).Count(&existCount)
+		s.App.DB.Model(&model.Building{}).Where("building_no = ?", buildingNo).Count(&existCount)
 		if existCount > 0 {
 			continue
 		}
@@ -221,7 +228,7 @@ func (s *BuildingService) ImportBuildings(file *multipart.FileHeader) (int, erro
 			RoomCount:    roomCount,
 			Remark:       remark,
 		}
-		if err := s.app.DB.Create(building).Error; err == nil {
+		if err := s.App.DB.Create(building).Error; err == nil {
 			successCount++
 		}
 	}
@@ -229,9 +236,9 @@ func (s *BuildingService) ImportBuildings(file *multipart.FileHeader) (int, erro
 	return successCount, nil
 }
 
-func (s *BuildingService) ExportBuildings(req *dto.BuildingExportReq) (string, error) {
+func (s *BuildingServiceProvider) ExportBuildings(req *dto.BuildingExportReq) (string, error) {
 	var list []*model.Building
-	db := s.app.DB.Model(&model.Building{})
+	db := s.App.DB.Model(&model.Building{})
 
 	if req.CampusID != "" {
 		db = db.Where("campus_id = ?", req.CampusID)
@@ -253,7 +260,7 @@ func (s *BuildingService) ExportBuildings(req *dto.BuildingExportReq) (string, e
 	for _, v := range list {
 		var campus model.Campus
 		campusName := ""
-		if err := s.app.DB.First(&campus, "id = ?", v.CampusID).Error; err == nil {
+		if err := s.App.DB.First(&campus, "id = ?", v.CampusID).Error; err == nil {
 			campusName = campus.CampusName
 		}
 		record := []string{
@@ -271,9 +278,9 @@ func (s *BuildingService) ExportBuildings(req *dto.BuildingExportReq) (string, e
 	return builder.String(), nil
 }
 
-func (s *BuildingService) checkBuildingNoUnique(id, buildingNo string) error {
+func (s *BuildingServiceProvider) checkBuildingNoUnique(id, buildingNo string) error {
 	var count int64
-	query := s.app.DB.Model(&model.Building{}).Where("building_no = ?", buildingNo)
+	query := s.App.DB.Model(&model.Building{}).Where("building_no = ?", buildingNo)
 	if id != "" {
 		query = query.Where("id != ?", id)
 	}
@@ -284,18 +291,18 @@ func (s *BuildingService) checkBuildingNoUnique(id, buildingNo string) error {
 	return nil
 }
 
-func (s *BuildingService) checkCampusExists(campusID string) error {
+func (s *BuildingServiceProvider) checkCampusExists(campusID string) error {
 	var count int64
-	s.app.DB.Model(&model.Campus{}).Where("id = ?", campusID).Count(&count)
+	s.App.DB.Model(&model.Campus{}).Where("id = ?", campusID).Count(&count)
 	if count == 0 {
 		return errors.New("校区信息不存在")
 	}
 	return nil
 }
 
-func (s *BuildingService) GetBuildingsByCampus(campusID string) ([]*dto.BuildingResult, error) {
+func (s *BuildingServiceProvider) GetBuildingsByCampus(campusID string) ([]*dto.BuildingResult, error) {
 	var list []*model.Building
-	if err := s.app.DB.Where("campus_id = ?", campusID).Find(&list).Error; err != nil {
+	if err := s.App.DB.Where("campus_id = ?", campusID).Find(&list).Error; err != nil {
 		return nil, err
 	}
 

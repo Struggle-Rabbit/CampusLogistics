@@ -11,15 +11,24 @@ import (
 	"gorm.io/gorm"
 )
 
-type DormService struct {
-	app *app.App
+type DormService interface {
+	Create(req *dto.DormCreateReq) error
+	Update(req *dto.DormUpdateReq) error
+	Delete(ids []string) error
+	GetListByPage(req *dto.DormListPageReq) (*dto.PageResult, error)
+	GetDetail(id string) (*dto.DormResult, error)
+	AssignDorm(req *dto.DormAssignReq) error
+	TransferDorm(req *dto.DormTransferReq) error
+	CheckOut(req *dto.DormCheckOutReq) error
+	GetDormUsers(req *dto.DormUserListReq) (*dto.PageResult, error)
+	GetCapacityWarning() ([]*dto.DormResult, error)
 }
 
-func NewDormService(app *app.App) *DormService {
-	return &DormService{app: app}
+type DormServiceProvider struct {
+	App *app.App
 }
 
-func (s *DormService) Create(req *dto.DormCreateReq) error {
+func (s *DormServiceProvider) Create(req *dto.DormCreateReq) error {
 	if err := s.checkRoomNoUnique("", req.BuildingID, req.RoomNo); err != nil {
 		return err
 	}
@@ -36,10 +45,10 @@ func (s *DormService) Create(req *dto.DormCreateReq) error {
 		CurrentCount: 0,
 		Remark:       req.Remark,
 	}
-	return s.app.DB.Create(room).Error
+	return s.App.DB.Create(room).Error
 }
 
-func (s *DormService) Update(req *dto.DormUpdateReq) error {
+func (s *DormServiceProvider) Update(req *dto.DormUpdateReq) error {
 	if err := s.checkRoomNoUnique(req.ID, req.BuildingID, req.RoomNo); err != nil {
 		return err
 	}
@@ -47,7 +56,7 @@ func (s *DormService) Update(req *dto.DormUpdateReq) error {
 		return err
 	}
 
-	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+	return s.App.DB.Transaction(func(tx *gorm.DB) error {
 		var room model.DormRoom
 		if err := tx.First(&room, "id = ?", req.ID).Error; err != nil {
 			return errors.New("宿舍信息不存在")
@@ -67,8 +76,8 @@ func (s *DormService) Update(req *dto.DormUpdateReq) error {
 	})
 }
 
-func (s *DormService) Delete(ids []string) error {
-	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+func (s *DormServiceProvider) Delete(ids []string) error {
+	return s.App.DB.Transaction(func(tx *gorm.DB) error {
 		for _, id := range ids {
 			var room model.DormRoom
 			if err := tx.First(&room, "id = ?", id).Error; err != nil {
@@ -82,10 +91,10 @@ func (s *DormService) Delete(ids []string) error {
 	})
 }
 
-func (s *DormService) GetListByPage(req *dto.DormListPageReq) (*dto.PageResult, error) {
+func (s *DormServiceProvider) GetListByPage(req *dto.DormListPageReq) (*dto.PageResult, error) {
 	var list []*model.DormRoom
 	var total int64
-	db := s.app.DB.Model(&model.DormRoom{})
+	db := s.App.DB.Model(&model.DormRoom{})
 
 	if req.BuildingID != "" {
 		db = db.Where("building_id = ?", req.BuildingID)
@@ -110,7 +119,7 @@ func (s *DormService) GetListByPage(req *dto.DormListPageReq) (*dto.PageResult, 
 
 	if req.CampusID != "" {
 		db = db.Where("building_id IN ?",
-			s.app.DB.Model(&model.Building{}).Select("id").Where("campus_id = ?", req.CampusID))
+			s.App.DB.Model(&model.Building{}).Select("id").Where("campus_id = ?", req.CampusID))
 	}
 
 	if err := db.Count(&total).Error; err != nil {
@@ -174,9 +183,9 @@ func (s *DormService) GetListByPage(req *dto.DormListPageReq) (*dto.PageResult, 
 	}, nil
 }
 
-func (s *DormService) GetDetail(id string) (*dto.DormResult, error) {
+func (s *DormServiceProvider) GetDetail(id string) (*dto.DormResult, error) {
 	var room model.DormRoom
-	if err := s.app.DB.First(&room, "id = ?", id).Error; err != nil {
+	if err := s.App.DB.First(&room, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("宿舍信息不存在")
 		}
@@ -226,8 +235,8 @@ func (s *DormService) GetDetail(id string) (*dto.DormResult, error) {
 	}, nil
 }
 
-func (s *DormService) AssignDorm(req *dto.DormAssignReq) error {
-	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+func (s *DormServiceProvider) AssignDorm(req *dto.DormAssignReq) error {
+	return s.App.DB.Transaction(func(tx *gorm.DB) error {
 		var existCount int64
 		if err := tx.Model(&model.DormUser{}).Where("user_id = ? AND status = ?", req.UserID, 1).Count(&existCount).Error; err != nil {
 			return err
@@ -259,8 +268,8 @@ func (s *DormService) AssignDorm(req *dto.DormAssignReq) error {
 	})
 }
 
-func (s *DormService) TransferDorm(req *dto.DormTransferReq) error {
-	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+func (s *DormServiceProvider) TransferDorm(req *dto.DormTransferReq) error {
+	return s.App.DB.Transaction(func(tx *gorm.DB) error {
 		var sourceRoom model.DormRoom
 		if err := tx.First(&sourceRoom, "id = ?", req.RoomID).Error; err != nil {
 			return errors.New("当前宿舍信息不存在")
@@ -293,8 +302,8 @@ func (s *DormService) TransferDorm(req *dto.DormTransferReq) error {
 	})
 }
 
-func (s *DormService) CheckOut(req *dto.DormCheckOutReq) error {
-	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+func (s *DormServiceProvider) CheckOut(req *dto.DormCheckOutReq) error {
+	return s.App.DB.Transaction(func(tx *gorm.DB) error {
 		var room model.DormRoom
 		if err := tx.First(&room, "id = ?", req.RoomID).Error; err != nil {
 			return errors.New("宿舍信息不存在")
@@ -320,10 +329,10 @@ func (s *DormService) CheckOut(req *dto.DormCheckOutReq) error {
 	})
 }
 
-func (s *DormService) GetDormUsers(req *dto.DormUserListReq) (*dto.PageResult, error) {
+func (s *DormServiceProvider) GetDormUsers(req *dto.DormUserListReq) (*dto.PageResult, error) {
 	var list []*model.DormUser
 	var total int64
-	db := s.app.DB.Model(&model.DormUser{})
+	db := s.App.DB.Model(&model.DormUser{})
 
 	if req.RoomID != "" {
 		db = db.Where("room_id = ?", req.RoomID)
@@ -337,7 +346,7 @@ func (s *DormService) GetDormUsers(req *dto.DormUserListReq) (*dto.PageResult, e
 
 	if req.UserName != "" {
 		db = db.Where("user_id IN ?",
-			s.app.DB.Model(&model.SysUser{}).Select("user_code").Where("name LIKE ?", "%"+req.UserName+"%"))
+			s.App.DB.Model(&model.SysUser{}).Select("user_code").Where("name LIKE ?", "%"+req.UserName+"%"))
 	}
 
 	if err := db.Count(&total).Error; err != nil {
@@ -369,7 +378,7 @@ func (s *DormService) GetDormUsers(req *dto.DormUserListReq) (*dto.PageResult, e
 		var user model.SysUser
 		userName := ""
 		userType := ""
-		if err := s.app.DB.Where("user_code = ?", v.UserID).First(&user).Error; err == nil {
+		if err := s.App.DB.Where("user_code = ?", v.UserID).First(&user).Error; err == nil {
 			userName = user.Name
 			userType = user.UserType
 		}
@@ -406,9 +415,9 @@ func (s *DormService) GetDormUsers(req *dto.DormUserListReq) (*dto.PageResult, e
 	}, nil
 }
 
-func (s *DormService) GetCapacityWarning() ([]*dto.DormResult, error) {
+func (s *DormServiceProvider) GetCapacityWarning() ([]*dto.DormResult, error) {
 	var list []*model.DormRoom
-	if err := s.app.DB.Where("current_count >= max_count * 0.8").Find(&list).Error; err != nil {
+	if err := s.App.DB.Where("current_count >= max_count * 0.8").Find(&list).Error; err != nil {
 		return nil, err
 	}
 
@@ -441,9 +450,9 @@ func (s *DormService) GetCapacityWarning() ([]*dto.DormResult, error) {
 	return results, nil
 }
 
-func (s *DormService) checkRoomNoUnique(id, buildingID, roomNo string) error {
+func (s *DormServiceProvider) checkRoomNoUnique(id, buildingID, roomNo string) error {
 	var count int64
-	query := s.app.DB.Model(&model.DormRoom{}).Where("building_id = ? AND room_no = ?", buildingID, roomNo)
+	query := s.App.DB.Model(&model.DormRoom{}).Where("building_id = ? AND room_no = ?", buildingID, roomNo)
 	if id != "" {
 		query = query.Where("id != ?", id)
 	}
@@ -454,40 +463,40 @@ func (s *DormService) checkRoomNoUnique(id, buildingID, roomNo string) error {
 	return nil
 }
 
-func (s *DormService) checkBuildingExists(buildingID string) error {
+func (s *DormServiceProvider) checkBuildingExists(buildingID string) error {
 	var count int64
-	s.app.DB.Model(&model.Building{}).Where("id = ?", buildingID).Count(&count)
+	s.App.DB.Model(&model.Building{}).Where("id = ?", buildingID).Count(&count)
 	if count == 0 {
 		return errors.New("楼栋信息不存在")
 	}
 	return nil
 }
 
-func (s *DormService) getBuildingInfo(id string) (*model.Building, error) {
+func (s *DormServiceProvider) getBuildingInfo(id string) (*model.Building, error) {
 	var building model.Building
-	if err := s.app.DB.First(&building, "id = ?", id).Error; err != nil {
+	if err := s.App.DB.First(&building, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &building, nil
 }
 
-func (s *DormService) getCampusInfo(id string) (*model.Campus, error) {
+func (s *DormServiceProvider) getCampusInfo(id string) (*model.Campus, error) {
 	var campus model.Campus
-	if err := s.app.DB.First(&campus, "id = ?", id).Error; err != nil {
+	if err := s.App.DB.First(&campus, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &campus, nil
 }
 
-func (s *DormService) getRoomInfo(id string) (*model.DormRoom, error) {
+func (s *DormServiceProvider) getRoomInfo(id string) (*model.DormRoom, error) {
 	var room model.DormRoom
-	if err := s.app.DB.First(&room, "id = ?", id).Error; err != nil {
+	if err := s.App.DB.First(&room, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &room, nil
 }
 
-func (s *DormService) getRoomTypeName(roomType int) string {
+func (s *DormServiceProvider) getRoomTypeName(roomType int) string {
 	switch roomType {
 	case 1:
 		return "4人间"

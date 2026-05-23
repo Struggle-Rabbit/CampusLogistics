@@ -9,17 +9,22 @@ import (
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
 )
 
-type MenuService struct {
-	app *app.App
+// MenuService 菜单服务接口
+type MenuService interface {
+	CreateMenu(req *dto.CreateMenuReq) error
+	UpdateMenu(req *dto.UpdateMenuReq) error
+	DelMenu(id []string) error
+	GetMenuList(req *dto.MenuListReq) ([]dto.MenuResult, error)
+	GetMenuListByPage(req *dto.MenuListByPageReq) (*dto.PageResult, error)
+	MenuDetailById(id string) (*dto.MenuResult, error)
+	BuildMenuTree(allMenus []model.SysMenu) []dto.MenuResult
 }
 
-func NewMenuService(app *app.App) *MenuService {
-	return &MenuService{
-		app: app,
-	}
+type MenuServiceProvider struct {
+	App *app.App
 }
 
-func (s *MenuService) CreateMenu(req *dto.CreateMenuReq) error {
+func (s *MenuServiceProvider) CreateMenu(req *dto.CreateMenuReq) error {
 	menu := &model.SysMenu{
 		ParentID:    req.ParentID,
 		Name:        req.Name,
@@ -42,10 +47,10 @@ func (s *MenuService) CreateMenu(req *dto.CreateMenuReq) error {
 		menu.Component = req.Component
 	}
 
-	return s.app.DB.Create(menu).Error
+	return s.App.DB.Create(menu).Error
 }
 
-func (s *MenuService) UpdateMenu(req *dto.UpdateMenuReq) error {
+func (s *MenuServiceProvider) UpdateMenu(req *dto.UpdateMenuReq) error {
 	if req.Type == 2 {
 		if req.Path == "" {
 			return errors.New("菜单路由地址不能为空")
@@ -67,17 +72,17 @@ func (s *MenuService) UpdateMenu(req *dto.UpdateMenuReq) error {
 		"component":   req.Component,
 	}
 
-	return s.app.DB.Model(&model.SysMenu{}).Where("id = ?", req.ID).Updates(updateData).Error
+	return s.App.DB.Model(&model.SysMenu{}).Where("id = ?", req.ID).Updates(updateData).Error
 }
 
-func (s *MenuService) DelMenu(id []string) error {
+func (s *MenuServiceProvider) DelMenu(id []string) error {
 
-	return s.app.DB.Delete(&model.SysMenu{}, id).Error
+	return s.App.DB.Delete(&model.SysMenu{}, id).Error
 }
 
-func (s *MenuService) GetMenuList(req *dto.MenuListReq) ([]dto.MenuResult, error) {
+func (s *MenuServiceProvider) GetMenuList(req *dto.MenuListReq) ([]dto.MenuResult, error) {
 	var menuSqlRes []model.SysMenu
-	tx := s.app.DB.Model(&model.SysMenu{})
+	tx := s.App.DB.Model(&model.SysMenu{})
 	if req.Name != nil && *req.Name != "" {
 		tx = tx.Where("name LIKE ?", "%"+*req.Name+"%")
 	}
@@ -102,10 +107,10 @@ func (s *MenuService) GetMenuList(req *dto.MenuListReq) ([]dto.MenuResult, error
 	return menuTree, nil
 }
 
-func (s *MenuService) GetMenuListByPage(req *dto.MenuListByPageReq) (*dto.PageResult, error) {
+func (s *MenuServiceProvider) GetMenuListByPage(req *dto.MenuListByPageReq) (*dto.PageResult, error) {
 	var list []model.SysMenu
 	var total int64
-	db := s.app.DB.Model(&model.SysMenu{})
+	db := s.App.DB.Model(&model.SysMenu{})
 	if err := db.Where("parent_id = ?", "0").Count(&total).Error; err != nil {
 		return nil, err
 	}
@@ -136,9 +141,9 @@ func (s *MenuService) GetMenuListByPage(req *dto.MenuListByPageReq) (*dto.PageRe
 	}, nil
 }
 
-func (s *MenuService) MenuDetailById(id string) (*dto.MenuResult, error) {
+func (s *MenuServiceProvider) MenuDetailById(id string) (*dto.MenuResult, error) {
 	var m model.SysMenu
-	err := s.app.DB.Where("id = ?", id).First(&m).Error
+	err := s.App.DB.Where("id = ?", id).First(&m).Error
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +166,7 @@ func (s *MenuService) MenuDetailById(id string) (*dto.MenuResult, error) {
 }
 
 // BuildMenuTree 处理树形菜单结构
-func (s *MenuService) BuildMenuTree(allMenus []model.SysMenu) []dto.MenuResult {
+func (s *MenuServiceProvider) BuildMenuTree(allMenus []model.SysMenu) []dto.MenuResult {
 	menuMap := make(map[string]*dto.MenuResult)
 
 	// 1. 初始化 Map

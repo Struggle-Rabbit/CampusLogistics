@@ -2,17 +2,25 @@ package building
 
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/building"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
-type BuildingController struct {
-	srv *service.ServiceProvider
+// BuildingController 楼栋控制器接口
+type BuildingController interface {
+	Create(c *gin.Context)
+	Update(c *gin.Context)
+	Delete(c *gin.Context)
+	GetListByPage(c *gin.Context)
+	GetDetail(c *gin.Context)
+	GetBuildingsByCampus(c *gin.Context)
+	ImportBuildings(c *gin.Context)
+	ExportBuildings(c *gin.Context)
 }
 
-func NewBuildingController(srv *service.ServiceProvider) *BuildingController {
-	return &BuildingController{srv: srv}
+type BuildingControllerProvider struct {
+	BuildingSvc building.BuildingService
 }
 
 // Create 创建楼栋
@@ -26,13 +34,13 @@ func NewBuildingController(srv *service.ServiceProvider) *BuildingController {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/building/create [post]
-func (s *BuildingController) Create(c *gin.Context) {
+func (s *BuildingControllerProvider) Create(c *gin.Context) {
 	var req dto.BuildingCreateReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := s.srv.BuildingService.Create(&req); err != nil {
+	if err := s.BuildingSvc.Create(&req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -50,13 +58,13 @@ func (s *BuildingController) Create(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/building/update [post]
-func (s *BuildingController) Update(c *gin.Context) {
+func (s *BuildingControllerProvider) Update(c *gin.Context) {
 	var req dto.BuildingUpdateReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := s.srv.BuildingService.Update(&req); err != nil {
+	if err := s.BuildingSvc.Update(&req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -74,7 +82,7 @@ func (s *BuildingController) Update(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/building/del [post]
-func (s *BuildingController) Delete(c *gin.Context) {
+func (s *BuildingControllerProvider) Delete(c *gin.Context) {
 	var data map[string]interface{}
 	if err := c.ShouldBindJSON(&data); err != nil {
 		utils.Fail(c, "参数错误")
@@ -94,7 +102,7 @@ func (s *BuildingController) Delete(c *gin.Context) {
 		}
 	}
 
-	if err := s.srv.BuildingService.Delete(idStrs); err != nil {
+	if err := s.BuildingSvc.Delete(idStrs); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -112,13 +120,13 @@ func (s *BuildingController) Delete(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/building/list [get]
-func (s *BuildingController) GetListByPage(c *gin.Context) {
+func (s *BuildingControllerProvider) GetListByPage(c *gin.Context) {
 	var req dto.BuildingListPageReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	res, err := s.srv.BuildingService.GetListByPage(&req)
+	res, err := s.BuildingSvc.GetListByPage(&req)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -137,14 +145,14 @@ func (s *BuildingController) GetListByPage(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/building/detail [get]
-func (s *BuildingController) GetDetail(c *gin.Context) {
+func (s *BuildingControllerProvider) GetDetail(c *gin.Context) {
 	id := c.Query("id")
 	if id == "" {
 		utils.Fail(c, "请提供楼栋ID")
 		return
 	}
 
-	res, err := s.srv.BuildingService.GetDetail(id)
+	res, err := s.BuildingSvc.GetDetail(id)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -163,14 +171,14 @@ func (s *BuildingController) GetDetail(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/building/byCampus [get]
-func (s *BuildingController) GetBuildingsByCampus(c *gin.Context) {
+func (s *BuildingControllerProvider) GetBuildingsByCampus(c *gin.Context) {
 	campusID := c.Query("campus_id")
 	if campusID == "" {
 		utils.Fail(c, "请提供校区ID")
 		return
 	}
 
-	res, err := s.srv.BuildingService.GetBuildingsByCampus(campusID)
+	res, err := s.BuildingSvc.GetBuildingsByCampus(campusID)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -189,14 +197,14 @@ func (s *BuildingController) GetBuildingsByCampus(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/building/import [post]
-func (s *BuildingController) ImportBuildings(c *gin.Context) {
+func (s *BuildingControllerProvider) ImportBuildings(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
 		utils.Fail(c, "请上传文件")
 		return
 	}
 
-	count, err := s.srv.BuildingService.ImportBuildings(file)
+	count, err := s.BuildingSvc.ImportBuildings(file)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -215,13 +223,13 @@ func (s *BuildingController) ImportBuildings(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/building/export [get]
-func (s *BuildingController) ExportBuildings(c *gin.Context) {
+func (s *BuildingControllerProvider) ExportBuildings(c *gin.Context) {
 	var req dto.BuildingExportReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	csvData, err := s.srv.BuildingService.ExportBuildings(&req)
+	csvData, err := s.BuildingSvc.ExportBuildings(&req)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return

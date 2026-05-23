@@ -2,17 +2,26 @@ package dorm
 
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/dorm"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
-type DormController struct {
-	srv *service.ServiceProvider
+type DormController interface {
+	Create(c *gin.Context)
+	Update(c *gin.Context)
+	Delete(c *gin.Context)
+	GetListByPage(c *gin.Context)
+	GetDetail(c *gin.Context)
+	AssignDorm(c *gin.Context)
+	TransferDorm(c *gin.Context)
+	CheckOut(c *gin.Context)
+	GetDormUsers(c *gin.Context)
+	GetCapacityWarning(c *gin.Context)
 }
 
-func NewDormController(srv *service.ServiceProvider) *DormController {
-	return &DormController{srv: srv}
+type DormControllerProvider struct {
+	DormSvc dorm.DormService
 }
 
 // Create 创建宿舍
@@ -26,13 +35,13 @@ func NewDormController(srv *service.ServiceProvider) *DormController {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/dorm/create [post]
-func (s *DormController) Create(c *gin.Context) {
+func (s *DormControllerProvider) Create(c *gin.Context) {
 	var req dto.DormCreateReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := s.srv.DormService.Create(&req); err != nil {
+	if err := s.DormSvc.Create(&req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -50,13 +59,13 @@ func (s *DormController) Create(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/dorm/update [post]
-func (s *DormController) Update(c *gin.Context) {
+func (s *DormControllerProvider) Update(c *gin.Context) {
 	var req dto.DormUpdateReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := s.srv.DormService.Update(&req); err != nil {
+	if err := s.DormSvc.Update(&req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -74,7 +83,7 @@ func (s *DormController) Update(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/dorm/del [post]
-func (s *DormController) Delete(c *gin.Context) {
+func (s *DormControllerProvider) Delete(c *gin.Context) {
 	var data map[string]interface{}
 	if err := c.ShouldBindJSON(&data); err != nil {
 		utils.Fail(c, "参数错误")
@@ -94,7 +103,7 @@ func (s *DormController) Delete(c *gin.Context) {
 		}
 	}
 
-	if err := s.srv.DormService.Delete(idStrs); err != nil {
+	if err := s.DormSvc.Delete(idStrs); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -112,13 +121,13 @@ func (s *DormController) Delete(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/dorm/list [get]
-func (s *DormController) GetListByPage(c *gin.Context) {
+func (s *DormControllerProvider) GetListByPage(c *gin.Context) {
 	var req dto.DormListPageReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	res, err := s.srv.DormService.GetListByPage(&req)
+	res, err := s.DormSvc.GetListByPage(&req)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -137,14 +146,14 @@ func (s *DormController) GetListByPage(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/dorm/detail [get]
-func (s *DormController) GetDetail(c *gin.Context) {
+func (s *DormControllerProvider) GetDetail(c *gin.Context) {
 	id := c.Query("id")
 	if id == "" {
 		utils.Fail(c, "请提供宿舍ID")
 		return
 	}
 
-	res, err := s.srv.DormService.GetDetail(id)
+	res, err := s.DormSvc.GetDetail(id)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -163,13 +172,13 @@ func (s *DormController) GetDetail(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/dorm/assign [post]
-func (s *DormController) AssignDorm(c *gin.Context) {
+func (s *DormControllerProvider) AssignDorm(c *gin.Context) {
 	var req dto.DormAssignReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := s.srv.DormService.AssignDorm(&req); err != nil {
+	if err := s.DormSvc.AssignDorm(&req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -187,13 +196,13 @@ func (s *DormController) AssignDorm(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/dorm/transfer [post]
-func (s *DormController) TransferDorm(c *gin.Context) {
+func (s *DormControllerProvider) TransferDorm(c *gin.Context) {
 	var req dto.DormTransferReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := s.srv.DormService.TransferDorm(&req); err != nil {
+	if err := s.DormSvc.TransferDorm(&req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -211,13 +220,13 @@ func (s *DormController) TransferDorm(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/dorm/checkout [post]
-func (s *DormController) CheckOut(c *gin.Context) {
+func (s *DormControllerProvider) CheckOut(c *gin.Context) {
 	var req dto.DormCheckOutReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := s.srv.DormService.CheckOut(&req); err != nil {
+	if err := s.DormSvc.CheckOut(&req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -235,13 +244,13 @@ func (s *DormController) CheckOut(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/dorm/users [get]
-func (s *DormController) GetDormUsers(c *gin.Context) {
+func (s *DormControllerProvider) GetDormUsers(c *gin.Context) {
 	var req dto.DormUserListReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	res, err := s.srv.DormService.GetDormUsers(&req)
+	res, err := s.DormSvc.GetDormUsers(&req)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -259,8 +268,8 @@ func (s *DormController) GetDormUsers(c *gin.Context) {
 // @Failure 400 {object} utils.ErrResponse
 // @Failure 500 {object} utils.ErrResponse
 // @Router /api/v1/dorm/warning [get]
-func (s *DormController) GetCapacityWarning(c *gin.Context) {
-	res, err := s.srv.DormService.GetCapacityWarning()
+func (s *DormControllerProvider) GetCapacityWarning(c *gin.Context) {
+	res, err := s.DormSvc.GetCapacityWarning()
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return

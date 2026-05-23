@@ -10,15 +10,20 @@ import (
 	"gorm.io/gorm"
 )
 
-type CampusService struct {
-	app *app.App
+type CampusService interface {
+	Create(req *dto.CampusCreateReq) error
+	Update(req *dto.CampusUpdateReq) error
+	Delete(ids []string) error
+	GetListByPage(req *dto.CampusListPageReq) (*dto.PageResult, error)
+	GetDetail(id string) (*dto.CampusResult, error)
+	GetAll() ([]*dto.CampusResult, error)
 }
 
-func NewCampusService(app *app.App) *CampusService {
-	return &CampusService{app: app}
+type CampusServiceProvider struct {
+	App *app.App
 }
 
-func (s *CampusService) Create(req *dto.CampusCreateReq) error {
+func (s *CampusServiceProvider) Create(req *dto.CampusCreateReq) error {
 	campus := &model.Campus{
 		CampusName: req.CampusName,
 		Address:    req.Address,
@@ -26,11 +31,11 @@ func (s *CampusService) Create(req *dto.CampusCreateReq) error {
 		Phone:      req.Phone,
 		Remark:     req.Remark,
 	}
-	return s.app.DB.Create(campus).Error
+	return s.App.DB.Create(campus).Error
 }
 
-func (s *CampusService) Update(req *dto.CampusUpdateReq) error {
-	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+func (s *CampusServiceProvider) Update(req *dto.CampusUpdateReq) error {
+	return s.App.DB.Transaction(func(tx *gorm.DB) error {
 		var campus model.Campus
 		if err := tx.First(&campus, "id = ?", req.ID).Error; err != nil {
 			return errors.New("校区信息不存在")
@@ -44,8 +49,8 @@ func (s *CampusService) Update(req *dto.CampusUpdateReq) error {
 	})
 }
 
-func (s *CampusService) Delete(ids []string) error {
-	return s.app.DB.Transaction(func(tx *gorm.DB) error {
+func (s *CampusServiceProvider) Delete(ids []string) error {
+	return s.App.DB.Transaction(func(tx *gorm.DB) error {
 		var count int64
 		if err := tx.Model(&model.Building{}).Where("campus_id IN ?", ids).Count(&count).Error; err != nil {
 			return err
@@ -57,10 +62,10 @@ func (s *CampusService) Delete(ids []string) error {
 	})
 }
 
-func (s *CampusService) GetListByPage(req *dto.CampusListPageReq) (*dto.PageResult, error) {
+func (s *CampusServiceProvider) GetListByPage(req *dto.CampusListPageReq) (*dto.PageResult, error) {
 	var list []*model.Campus
 	var total int64
-	db := s.app.DB.Model(&model.Campus{})
+	db := s.App.DB.Model(&model.Campus{})
 
 	if req.CampusName != "" {
 		db = db.Where("campus_name LIKE ?", "%"+req.CampusName+"%")
@@ -77,7 +82,7 @@ func (s *CampusService) GetListByPage(req *dto.CampusListPageReq) (*dto.PageResu
 	var results []*dto.CampusResult
 	for _, v := range list {
 		var buildingCount int64
-		s.app.DB.Model(&model.Building{}).Where("campus_id = ?", v.ID).Count(&buildingCount)
+		s.App.DB.Model(&model.Building{}).Where("campus_id = ?", v.ID).Count(&buildingCount)
 
 		results = append(results, &dto.CampusResult{
 			ID:            v.ID,
@@ -98,9 +103,9 @@ func (s *CampusService) GetListByPage(req *dto.CampusListPageReq) (*dto.PageResu
 	}, nil
 }
 
-func (s *CampusService) GetDetail(id string) (*dto.CampusResult, error) {
+func (s *CampusServiceProvider) GetDetail(id string) (*dto.CampusResult, error) {
 	var campus model.Campus
-	if err := s.app.DB.First(&campus, "id = ?", id).Error; err != nil {
+	if err := s.App.DB.First(&campus, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("校区信息不存在")
 		}
@@ -108,7 +113,7 @@ func (s *CampusService) GetDetail(id string) (*dto.CampusResult, error) {
 	}
 
 	var buildingCount int64
-	s.app.DB.Model(&model.Building{}).Where("campus_id = ?", campus.ID).Count(&buildingCount)
+	s.App.DB.Model(&model.Building{}).Where("campus_id = ?", campus.ID).Count(&buildingCount)
 
 	return &dto.CampusResult{
 		ID:            campus.ID,
@@ -121,9 +126,9 @@ func (s *CampusService) GetDetail(id string) (*dto.CampusResult, error) {
 	}, nil
 }
 
-func (s *CampusService) GetAll() ([]*dto.CampusResult, error) {
+func (s *CampusServiceProvider) GetAll() ([]*dto.CampusResult, error) {
 	var list []*model.Campus
-	if err := s.app.DB.Order("created_at DESC").Find(&list).Error; err != nil {
+	if err := s.App.DB.Order("created_at DESC").Find(&list).Error; err != nil {
 		return nil, err
 	}
 

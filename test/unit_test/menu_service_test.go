@@ -10,7 +10,7 @@ import (
 
 func TestMenuService(t *testing.T) {
 	_, appInstance := SetupTestDB()
-	svc := menu.NewMenuService(appInstance)
+	svc := &menu.MenuServiceProvider{App: appInstance}
 
 	// 1. 创建菜单
 	req1 := &dto.CreateMenuReq{

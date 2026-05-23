@@ -2,19 +2,22 @@ package repair
 
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/repair"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
-type RepairController struct {
-	srv *service.ServiceProvider
+type RepairController interface {
+	RepairOrderSubmit(c *gin.Context)
+	GetListByPage(c *gin.Context)
+	GetDetailById(c *gin.Context)
+	DelRepairOrderById(c *gin.Context)
+	UpdateRepairOrder(c *gin.Context)
+	OrderRecord(c *gin.Context)
 }
 
-func NewRepairController(srv *service.ServiceProvider) *RepairController {
-	return &RepairController{
-		srv: srv,
-	}
+type RepairControllerProvider struct {
+	RepairSvc repair.RepairService
 }
 
 // RepairOrderSubmit 提交报修单
@@ -27,14 +30,14 @@ func NewRepairController(srv *service.ServiceProvider) *RepairController {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/repair/submit [post]
-func (ctl *RepairController) RepairOrderSubmit(c *gin.Context) {
+func (s *RepairControllerProvider) RepairOrderSubmit(c *gin.Context) {
 	var req dto.RepairOrderSubmitReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
 	userID, _ := c.Get("userID")
-	if err := ctl.srv.RepairService.RepairOrderSubmit(userID.(string), &req); err != nil {
+	if err := s.RepairSvc.RepairOrderSubmit(userID.(string), &req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -51,13 +54,13 @@ func (ctl *RepairController) RepairOrderSubmit(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse{data=dto.PageResult{list=[]dto.RepairOrderResult}}
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/repair/list [get]
-func (ctl *RepairController) GetListByPage(c *gin.Context) {
+func (s *RepairControllerProvider) GetListByPage(c *gin.Context) {
 	var req dto.RepairOrderListByPageReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	res, err := ctl.srv.RepairService.GetListByPage(&req)
+	res, err := s.RepairSvc.GetListByPage(&req)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -75,14 +78,14 @@ func (ctl *RepairController) GetListByPage(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse{data=dto.RepairOrderResult}
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/repair/detail [get]
-func (ctl *RepairController) GetDetailById(c *gin.Context) {
+func (s *RepairControllerProvider) GetDetailById(c *gin.Context) {
 	id := c.Query("id")
 	if id == "" {
 		utils.Fail(c, "参数ID不能为空")
 		return
 	}
 
-	res, err := ctl.srv.RepairService.GetDetailById(id)
+	res, err := s.RepairSvc.GetDetailById(id)
 	if err != nil {
 		utils.Fail(c, err.Error())
 		return
@@ -100,13 +103,13 @@ func (ctl *RepairController) GetDetailById(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/repair/update [post]
-func (ctl *RepairController) UpdateRepairOrder(c *gin.Context) {
+func (s *RepairControllerProvider) UpdateRepairOrder(c *gin.Context) {
 	var req dto.UpdateRepairOrderSubmitReq
 	if !utils.ShouldBind(c, &req) {
 		return
 	}
 
-	if err := ctl.srv.RepairService.UpdateRepairOrder(req); err != nil {
+	if err := s.RepairSvc.UpdateRepairOrder(req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -123,7 +126,7 @@ func (ctl *RepairController) UpdateRepairOrder(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/repair/record [post]
-func (ctl *RepairController) OrderRecord(c *gin.Context) {
+func (s *RepairControllerProvider) OrderRecord(c *gin.Context) {
 	var req dto.RecordReq
 	if !utils.ShouldBind(c, &req) {
 		return
@@ -132,7 +135,7 @@ func (ctl *RepairController) OrderRecord(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	req.UserID = userID.(string)
 
-	if err := ctl.srv.RepairService.OrderRecord(req); err != nil {
+	if err := s.RepairSvc.OrderRecord(req); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
@@ -149,14 +152,14 @@ func (ctl *RepairController) OrderRecord(c *gin.Context) {
 // @Success 200 {object} utils.SuccessResponse
 // @Failure 400 {object} utils.ErrResponse
 // @Router /api/v1/repair/del [post]
-func (ctl *RepairController) DelRepairOrder(c *gin.Context) {
+func (s *RepairControllerProvider) DelRepairOrder(c *gin.Context) {
 	id := c.Query("id")
 	if id == "" {
 		utils.Fail(c, "参数ID不能为空")
 		return
 	}
 
-	if err := ctl.srv.RepairService.DelRepairOrderById(id); err != nil {
+	if err := s.RepairSvc.DelRepairOrderById(id); err != nil {
 		utils.Fail(c, err.Error())
 		return
 	}
