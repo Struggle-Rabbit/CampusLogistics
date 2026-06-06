@@ -17,7 +17,7 @@
 // @in                          header
 // @name                        Authorization
 // @description                 Type "Bearer" followed by a space and JWT token.
-package main
+package service
 
 import (
 	"fmt"
@@ -29,8 +29,8 @@ import (
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 )
 
-func main() {
-
+func ServiceRun() {
+	fmt.Println("服务启动中....")
 	// 初始化雪花算法
 	utils.InitSnowflake()
 

@@ -205,7 +205,6 @@ func Run(db *gorm.DB) error {
 		zap.Int("port", globalAppConfig.Port),
 	)
 
-	fmt.Println("服务启动中....")
 	if err := r.Run(fmt.Sprintf("%s:%d", globalAppConfig.Host, globalAppConfig.Port)); err != nil {
 		return err
 	}

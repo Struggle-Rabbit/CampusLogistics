@@ -1,5 +1,5 @@
 #!/bin/bash
-# CampusLogistics API 接口测试脚本 v3 - 最终版
+# CampusLogistics API 接口测试脚本
 
 BASE_URL="http://127.0.0.1:8880/api/v1"
 PASS=0
