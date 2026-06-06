@@ -1,9 +1,11 @@
 package unittest
 
 import (
+	"fmt"
 	"os"
+	"sync"
+	"time"
 
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/config"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
@@ -11,8 +13,18 @@ import (
 	"gorm.io/gorm"
 )
 
-func SetupTestDB() (*gorm.DB, *app.App) {
-	tmpFile := os.TempDir() + "/test_campus_" + "db"
+var (
+	testCounter int64
+	counterMu   sync.Mutex
+)
+
+func SetupTestDB() *gorm.DB {
+	counterMu.Lock()
+	testCounter++
+	idx := testCounter
+	counterMu.Unlock()
+
+	tmpFile := fmt.Sprintf("%s/test_campus_db_%d_%d", os.TempDir(), time.Now().UnixNano(), idx)
 	os.Remove(tmpFile)
 
 	db, err := gorm.Open(sqlite.Open(tmpFile+"?cache=shared"), &gorm.Config{})
@@ -47,7 +59,5 @@ func SetupTestDB() (*gorm.DB, *app.App) {
 		&model.Notice{},
 	)
 
-	appInstance := app.NewApp(cfg, db)
-
-	return db, appInstance
+	return db
 }

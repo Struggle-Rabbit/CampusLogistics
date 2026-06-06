@@ -5,27 +5,20 @@ import (
 	"time"
 
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
 	"gorm.io/gorm"
 )
 
-type NoticeService interface {
-	Create(creatorID string, req *dto.NoticeCreateReq) error
-	Update(req *dto.NoticeUpdateReq) error
-	Delete(ids []string) error
-	GetListByPage(req *dto.NoticeListPageReq) (*dto.PageResult, error)
-	GetPublicList(req *dto.NoticeListPageReq) (*dto.PageResult, error)
-	GetDetail(id string) (*dto.NoticeResult, error)
-	SetTop(req *dto.NoticeTopReq) error
+type Service struct {
+	db *gorm.DB
 }
 
-type NoticeServiceProvider struct {
-	App *app.App
+func NewNoticeService(db *gorm.DB) *Service {
+	return &Service{db: db}
 }
 
-func (s *NoticeServiceProvider) Create(creatorID string, req *dto.NoticeCreateReq) error {
+func (s *Service) Create(creatorID string, req *dto.NoticeCreateReq) error {
 	if req.IsTop == dto.IsTopYes {
 		if err := s.checkTopLimit(); err != nil {
 			return err
@@ -43,7 +36,7 @@ func (s *NoticeServiceProvider) Create(creatorID string, req *dto.NoticeCreateRe
 		ViewCount:   0,
 	}
 
-	if err := s.App.DB.Create(notice).Error; err != nil {
+	if err := s.db.Create(notice).Error; err != nil {
 		return err
 	}
 
@@ -54,8 +47,8 @@ func (s *NoticeServiceProvider) Create(creatorID string, req *dto.NoticeCreateRe
 	return nil
 }
 
-func (s *NoticeServiceProvider) Update(req *dto.NoticeUpdateReq) error {
-	return s.App.DB.Transaction(func(tx *gorm.DB) error {
+func (s *Service) Update(req *dto.NoticeUpdateReq) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
 		var notice model.Notice
 		if err := tx.First(&notice, "id = ?", req.ID).Error; err != nil {
 			return errors.New("公告信息不存在")
@@ -88,8 +81,8 @@ func (s *NoticeServiceProvider) Update(req *dto.NoticeUpdateReq) error {
 	})
 }
 
-func (s *NoticeServiceProvider) Delete(ids []string) error {
-	return s.App.DB.Transaction(func(tx *gorm.DB) error {
+func (s *Service) Delete(ids []string) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
 		for _, id := range ids {
 			var notice model.Notice
 			if err := tx.First(&notice, "id = ?", id).Error; err != nil {
@@ -100,10 +93,10 @@ func (s *NoticeServiceProvider) Delete(ids []string) error {
 	})
 }
 
-func (s *NoticeServiceProvider) GetListByPage(req *dto.NoticeListPageReq) (*dto.PageResult, error) {
+func (s *Service) GetListByPage(req *dto.NoticeListPageReq) (*dto.PageResult, error) {
 	var list []*model.Notice
 	var total int64
-	db := s.App.DB.Model(&model.Notice{})
+	db := s.db.Model(&model.Notice{})
 
 	if req.Title != "" {
 		db = db.Where("title LIKE ?", "%"+req.Title+"%")
@@ -158,12 +151,12 @@ func (s *NoticeServiceProvider) GetListByPage(req *dto.NoticeListPageReq) (*dto.
 	}, nil
 }
 
-func (s *NoticeServiceProvider) GetPublicList(req *dto.NoticeListPageReq) (*dto.PageResult, error) {
+func (s *Service) GetPublicList(req *dto.NoticeListPageReq) (*dto.PageResult, error) {
 	var list []*model.Notice
 	var total int64
 	now := time.Now()
 
-	db := s.App.DB.Model(&model.Notice{}).Where("publish_time <= ?", now)
+	db := s.db.Model(&model.Notice{}).Where("publish_time <= ?", now)
 
 	if req.Title != "" {
 		db = db.Where("title LIKE ?", "%"+req.Title+"%")
@@ -208,16 +201,20 @@ func (s *NoticeServiceProvider) GetPublicList(req *dto.NoticeListPageReq) (*dto.
 	}, nil
 }
 
-func (s *NoticeServiceProvider) GetDetail(id string) (*dto.NoticeResult, error) {
+func (s *Service) GetDetail(id string) (*dto.NoticeResult, error) {
 	var notice model.Notice
-	if err := s.App.DB.First(&notice, "id = ?", id).Error; err != nil {
+	if err := s.db.First(&notice, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("公告信息不存在")
 		}
 		return nil, err
 	}
 
-	s.App.DB.Model(&notice).Update("view_count", notice.ViewCount+1)
+	// 修复竞态问题：使用 gorm.Expr 直接 SQL 自增
+	var updatedNotice model.Notice
+	if err := s.db.Model(&notice).Update("view_count", gorm.Expr("view_count + 1")).First(&updatedNotice, "id = ?", id).Error; err != nil {
+		return nil, err
+	}
 
 	creatorName := s.getCreatorName(notice.CreatorID)
 
@@ -230,7 +227,7 @@ func (s *NoticeServiceProvider) GetDetail(id string) (*dto.NoticeResult, error) 
 		IsTop:          notice.IsTop,
 		IsTopName:      dto.GetIsTopName(notice.IsTop),
 		PublishTime:    *notice.PublishTime,
-		ViewCount:      notice.ViewCount + 1,
+		ViewCount:      updatedNotice.ViewCount,
 		CreatorID:      notice.CreatorID,
 		CreatorName:    creatorName,
 		Attachments:    notice.Attachments,
@@ -239,8 +236,8 @@ func (s *NoticeServiceProvider) GetDetail(id string) (*dto.NoticeResult, error) 
 	}, nil
 }
 
-func (s *NoticeServiceProvider) SetTop(req *dto.NoticeTopReq) error {
-	return s.App.DB.Transaction(func(tx *gorm.DB) error {
+func (s *Service) SetTop(req *dto.NoticeTopReq) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
 		var notice model.Notice
 		if err := tx.First(&notice, "id = ?", req.ID).Error; err != nil {
 			return errors.New("公告信息不存在")
@@ -264,33 +261,33 @@ func (s *NoticeServiceProvider) SetTop(req *dto.NoticeTopReq) error {
 	})
 }
 
-func (s *NoticeServiceProvider) checkTopLimit() error {
+func (s *Service) checkTopLimit() error {
 	var count int64
-	s.App.DB.Model(&model.Notice{}).Where("is_top > ?", 0).Count(&count)
+	s.db.Model(&model.Notice{}).Where("is_top > ?", 0).Count(&count)
 	if count >= dto.MaxTopNotice {
 		return errors.New("置顶公告最多3条，请先取消其他公告的置顶状态")
 	}
 	return nil
 }
 
-func (s *NoticeServiceProvider) reorderTopNotices() error {
+func (s *Service) reorderTopNotices() error {
 	var topNotices []*model.Notice
-	if err := s.App.DB.Where("is_top > ?", 0).Order("publish_time DESC").Limit(dto.MaxTopNotice).Find(&topNotices).Error; err != nil {
+	if err := s.db.Where("is_top > ?", 0).Order("publish_time DESC").Limit(dto.MaxTopNotice).Find(&topNotices).Error; err != nil {
 		return err
 	}
 
 	for i, notice := range topNotices {
 		priority := dto.MaxTopNotice - i
-		if err := s.App.DB.Model(notice).Update("is_top", priority).Error; err != nil {
+		if err := s.db.Model(notice).Update("is_top", priority).Error; err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (s *NoticeServiceProvider) getCreatorName(creatorID string) string {
+func (s *Service) getCreatorName(creatorID string) string {
 	var user model.SysUser
-	if err := s.App.DB.Where("user_code = ?", creatorID).First(&user).Error; err == nil {
+	if err := s.db.Where("user_code = ?", creatorID).First(&user).Error; err == nil {
 		return user.Name
 	}
 	return creatorID

@@ -2,31 +2,21 @@ package role
 
 import (
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
-	"github.com/go-viper/mapstructure/v2"
+	"gorm.io/gorm"
 )
 
-type RoleService interface {
-	CreateRole(req *dto.CreateRoleReq) error
-	UpdateRole(req *dto.UpdateRoleReq) error
-	DelRole(id []string) error
-	GetRoleList(name string) ([]dto.RoleResult, error)
-	GetRoleListByPage(req *dto.RoleListByPageReq) (*dto.PageResult, error)
-	RoleDetailById(id string) (*dto.RoleResult, error)
+type Service struct {
+	db *gorm.DB
 }
 
-type RoleServiceProvider struct {
-	App *app.App
+func NewRoleService(db *gorm.DB) *Service {
+	return &Service{db: db}
 }
 
-func (s *RoleServiceProvider) CreateRole(req *dto.CreateRoleReq) error {
-	var role model.SysRole
-	if err := mapstructure.Decode(req, &role); err != nil {
-		return err
-	}
-	return s.App.DB.Create(&model.SysRole{
+func (s *Service) CreateRole(req *dto.CreateRoleReq) error {
+	return s.db.Create(&model.SysRole{
 		RoleName:    req.RoleName,
 		RoleCode:    req.RoleCode,
 		Status:      req.Status,
@@ -35,8 +25,8 @@ func (s *RoleServiceProvider) CreateRole(req *dto.CreateRoleReq) error {
 	}).Error
 }
 
-func (s *RoleServiceProvider) UpdateRole(req *dto.UpdateRoleReq) error {
-	return s.App.DB.Model(&model.SysRole{}).Where("id = ?", req.ID).Updates(map[string]interface{}{
+func (s *Service) UpdateRole(req *dto.UpdateRoleReq) error {
+	return s.db.Model(&model.SysRole{}).Where("id = ?", req.ID).Updates(map[string]interface{}{
 		"role_name":   req.RoleName,
 		"role_code":   req.RoleCode,
 		"status":      req.Status,
@@ -44,22 +34,21 @@ func (s *RoleServiceProvider) UpdateRole(req *dto.UpdateRoleReq) error {
 	}).Error
 }
 
-func (s *RoleServiceProvider) DelRole(id []string) error {
-
-	return s.App.DB.Delete(&model.SysRole{}, id).Error
+func (s *Service) DelRole(id []string) error {
+	return s.db.Delete(&model.SysRole{}, id).Error
 }
 
-func (s *RoleServiceProvider) GetRoleList(name string) ([]dto.RoleResult, error) {
+func (s *Service) GetRoleList(name string) ([]dto.RoleResult, error) {
 	var roleSqlRes []dto.RoleResult
 
-	s.App.DB.Model(&model.SysRole{}).Where("role_name LIKE ?", "%"+name+"%").Scan(&roleSqlRes)
+	s.db.Model(&model.SysRole{}).Where("role_name LIKE ?", "%"+name+"%").Scan(&roleSqlRes)
 
 	return roleSqlRes, nil
 }
 
-func (s *RoleServiceProvider) GetRoleListByPage(req *dto.RoleListByPageReq) (*dto.PageResult, error) {
+func (s *Service) GetRoleListByPage(req *dto.RoleListByPageReq) (*dto.PageResult, error) {
 	var total int64
-	db := s.App.DB.Model(&model.SysRole{})
+	db := s.db.Model(&model.SysRole{})
 	if err := db.Count(&total).Error; err != nil {
 		return nil, err
 	}
@@ -83,10 +72,10 @@ func (s *RoleServiceProvider) GetRoleListByPage(req *dto.RoleListByPageReq) (*dt
 	}, nil
 }
 
-func (s *RoleServiceProvider) RoleDetailById(id string) (*dto.RoleResult, error) {
+func (s *Service) RoleDetailById(id string) (*dto.RoleResult, error) {
 	var roleResult dto.RoleResult
 
-	if err := s.App.DB.Model(&model.SysRole{}).Where("id = ?", id).First(&roleResult).Error; err != nil {
+	if err := s.db.Model(&model.SysRole{}).Where("id = ?", id).First(&roleResult).Error; err != nil {
 		return nil, err
 	}
 

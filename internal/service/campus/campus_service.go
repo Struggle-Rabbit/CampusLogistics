@@ -4,26 +4,20 @@ import (
 	"errors"
 
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
 	"gorm.io/gorm"
 )
 
-type CampusService interface {
-	Create(req *dto.CampusCreateReq) error
-	Update(req *dto.CampusUpdateReq) error
-	Delete(ids []string) error
-	GetListByPage(req *dto.CampusListPageReq) (*dto.PageResult, error)
-	GetDetail(id string) (*dto.CampusResult, error)
-	GetAll() ([]*dto.CampusResult, error)
+type Service struct {
+	db *gorm.DB
 }
 
-type CampusServiceProvider struct {
-	App *app.App
+func NewCampusService(db *gorm.DB) *Service {
+	return &Service{db: db}
 }
 
-func (s *CampusServiceProvider) Create(req *dto.CampusCreateReq) error {
+func (s *Service) Create(req *dto.CampusCreateReq) error {
 	campus := &model.Campus{
 		CampusName: req.CampusName,
 		Address:    req.Address,
@@ -31,11 +25,11 @@ func (s *CampusServiceProvider) Create(req *dto.CampusCreateReq) error {
 		Phone:      req.Phone,
 		Remark:     req.Remark,
 	}
-	return s.App.DB.Create(campus).Error
+	return s.db.Create(campus).Error
 }
 
-func (s *CampusServiceProvider) Update(req *dto.CampusUpdateReq) error {
-	return s.App.DB.Transaction(func(tx *gorm.DB) error {
+func (s *Service) Update(req *dto.CampusUpdateReq) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
 		var campus model.Campus
 		if err := tx.First(&campus, "id = ?", req.ID).Error; err != nil {
 			return errors.New("校区信息不存在")
@@ -49,8 +43,8 @@ func (s *CampusServiceProvider) Update(req *dto.CampusUpdateReq) error {
 	})
 }
 
-func (s *CampusServiceProvider) Delete(ids []string) error {
-	return s.App.DB.Transaction(func(tx *gorm.DB) error {
+func (s *Service) Delete(ids []string) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
 		var count int64
 		if err := tx.Model(&model.Building{}).Where("campus_id IN ?", ids).Count(&count).Error; err != nil {
 			return err
@@ -62,10 +56,10 @@ func (s *CampusServiceProvider) Delete(ids []string) error {
 	})
 }
 
-func (s *CampusServiceProvider) GetListByPage(req *dto.CampusListPageReq) (*dto.PageResult, error) {
+func (s *Service) GetListByPage(req *dto.CampusListPageReq) (*dto.PageResult, error) {
 	var list []*model.Campus
 	var total int64
-	db := s.App.DB.Model(&model.Campus{})
+	db := s.db.Model(&model.Campus{})
 
 	if req.CampusName != "" {
 		db = db.Where("campus_name LIKE ?", "%"+req.CampusName+"%")
@@ -82,7 +76,7 @@ func (s *CampusServiceProvider) GetListByPage(req *dto.CampusListPageReq) (*dto.
 	var results []*dto.CampusResult
 	for _, v := range list {
 		var buildingCount int64
-		s.App.DB.Model(&model.Building{}).Where("campus_id = ?", v.ID).Count(&buildingCount)
+		s.db.Model(&model.Building{}).Where("campus_id = ?", v.ID).Count(&buildingCount)
 
 		results = append(results, &dto.CampusResult{
 			ID:            v.ID,
@@ -103,9 +97,9 @@ func (s *CampusServiceProvider) GetListByPage(req *dto.CampusListPageReq) (*dto.
 	}, nil
 }
 
-func (s *CampusServiceProvider) GetDetail(id string) (*dto.CampusResult, error) {
+func (s *Service) GetDetail(id string) (*dto.CampusResult, error) {
 	var campus model.Campus
-	if err := s.App.DB.First(&campus, "id = ?", id).Error; err != nil {
+	if err := s.db.First(&campus, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("校区信息不存在")
 		}
@@ -113,7 +107,7 @@ func (s *CampusServiceProvider) GetDetail(id string) (*dto.CampusResult, error) 
 	}
 
 	var buildingCount int64
-	s.App.DB.Model(&model.Building{}).Where("campus_id = ?", campus.ID).Count(&buildingCount)
+	s.db.Model(&model.Building{}).Where("campus_id = ?", campus.ID).Count(&buildingCount)
 
 	return &dto.CampusResult{
 		ID:            campus.ID,
@@ -126,9 +120,9 @@ func (s *CampusServiceProvider) GetDetail(id string) (*dto.CampusResult, error) 
 	}, nil
 }
 
-func (s *CampusServiceProvider) GetAll() ([]*dto.CampusResult, error) {
+func (s *Service) GetAll() ([]*dto.CampusResult, error) {
 	var list []*model.Campus
-	if err := s.App.DB.Order("created_at DESC").Find(&list).Error; err != nil {
+	if err := s.db.Order("created_at DESC").Find(&list).Error; err != nil {
 		return nil, err
 	}
 

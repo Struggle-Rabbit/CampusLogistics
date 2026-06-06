@@ -4,22 +4,21 @@ import (
 	"errors"
 
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"gorm.io/gorm"
 )
 
-type SystemService interface {
-	RefreshToken(token string) (*dto.RefreshTokenResult, error)
-	GetOperationLogListByPage(req *dto.OperationLogByPageReq) (*dto.PageResult, error)
+type Service struct {
+	db *gorm.DB
 }
 
-type SystemServiceProvider struct {
-	App *app.App
+func NewSystemService(db *gorm.DB) *Service {
+	return &Service{db: db}
 }
 
-func (s *SystemServiceProvider) RefreshToken(token string) (*dto.RefreshTokenResult, error) {
+func (s *Service) RefreshToken(token string) (*dto.RefreshTokenResult, error) {
 	info, err := utils.ParseToken(token)
 	if err != nil {
 		return nil, err
@@ -27,12 +26,11 @@ func (s *SystemServiceProvider) RefreshToken(token string) (*dto.RefreshTokenRes
 
 	var sysUser model.SysUser
 
-	if err := s.App.DB.Model(&model.SysUser{}).Where("id = ?", info.UserID).First(&sysUser).Error; err != nil {
+	if err := s.db.Model(&model.SysUser{}).Where("id = ?", info.UserID).First(&sysUser).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("未查询到用户信息")
-		} else {
-			return nil, err
 		}
+		return nil, err
 	}
 
 	if sysUser.RefreshToken != token {
@@ -44,8 +42,7 @@ func (s *SystemServiceProvider) RefreshToken(token string) (*dto.RefreshTokenRes
 		return nil, err
 	}
 
-	// 使用主键更新 refresh_token，避免 SQLite UPDATE...FROM 自引用歧义
-	if err := s.App.DB.Model(&sysUser).Update("refresh_token", refreshToken).Error; err != nil {
+	if err := s.db.Model(&sysUser).Update("refresh_token", refreshToken).Error; err != nil {
 		return nil, err
 	}
 
@@ -53,5 +50,36 @@ func (s *SystemServiceProvider) RefreshToken(token string) (*dto.RefreshTokenRes
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
+}
 
+func (s *Service) GetOperationLogListByPage(req *dto.OperationLogByPageReq) (*dto.PageResult, error) {
+	var total int64
+	db := s.db.Model(&model.SysOperationLog{})
+
+	if err := db.Count(&total).Error; err != nil {
+		return nil, err
+	}
+	if req.IP != "" {
+		db.Where("ip = ?", req.IP)
+	}
+
+	if req.UserID != "" {
+		db.Where("user_id = ?", req.UserID)
+	}
+
+	if !req.OperationTimeStart.IsZero() && !req.OperationTimeEnd.IsZero() {
+		db.Where("operation_at >= ? AND operation_at <= ?", req.OperationTimeStart, req.OperationTimeEnd)
+	}
+	var list []model.SysOperationLog
+
+	if err := db.Scopes(dao.Paginate(req.CurrentPage, req.PageSize)).Find(&list).Error; err != nil {
+		return nil, err
+	}
+
+	return &dto.PageResult{
+		List:        list,
+		Total:       total,
+		PageSize:    req.PageSize,
+		CurrentPage: req.CurrentPage,
+	}, nil
 }

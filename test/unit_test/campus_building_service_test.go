@@ -4,15 +4,15 @@ import (
 	"testing"
 
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/campus"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/building"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/campus"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCampusAndBuildingService(t *testing.T) {
-	_, appInstance := SetupTestDB()
-	campusSvc := &campus.CampusServiceProvider{App: appInstance}
-	buildingSvc := &building.BuildingServiceProvider{App: appInstance}
+	db := SetupTestDB()
+	campusSvc := campus.NewCampusService(db)
+	buildingSvc := building.NewBuildingService(db)
 
 	t.Run("创建校区", func(t *testing.T) {
 		req := &dto.CampusCreateReq{

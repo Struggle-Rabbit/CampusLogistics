@@ -11,10 +11,10 @@ import (
 )
 
 func TestDormService(t *testing.T) {
-	_, appInstance := SetupTestDB()
-	campusSvc := &campus.CampusServiceProvider{App: appInstance}
-	buildingSvc := &building.BuildingServiceProvider{App: appInstance}
-	dormSvc := &dorm.DormServiceProvider{App: appInstance}
+	db := SetupTestDB()
+	campusSvc := campus.NewCampusService(db)
+	buildingSvc := building.NewBuildingService(db)
+	dormSvc := dorm.NewDormService(db)
 
 	campusReq := &dto.CampusCreateReq{
 		CampusName: "测试校区",

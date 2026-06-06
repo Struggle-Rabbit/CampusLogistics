@@ -12,11 +12,11 @@ import (
 )
 
 func TestUtilityService(t *testing.T) {
-	_, appInstance := SetupTestDB()
-	campusSvc := &campus.CampusServiceProvider{App: appInstance}
-	buildingSvc := &building.BuildingServiceProvider{App: appInstance}
-	dormSvc := &dorm.DormServiceProvider{App: appInstance}
-	utilitySvc := &utility.UtilityServiceProvider{App: appInstance}
+	db := SetupTestDB()
+	campusSvc := campus.NewCampusService(db)
+	buildingSvc := building.NewBuildingService(db)
+	dormSvc := dorm.NewDormService(db)
+	utilitySvc := utility.NewUtilityService(db)
 
 	campusSvc.Create(&dto.CampusCreateReq{CampusName: "测试校区"})
 	campusList, _ := campusSvc.GetListByPage(&dto.CampusListPageReq{PageReq: dto.PageReq{CurrentPage: 1, PageSize: 10}})

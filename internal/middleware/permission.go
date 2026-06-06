@@ -31,9 +31,9 @@ func CheckPermission(db *gorm.DB, userId string, perms string) bool {
 	var count int64
 
 	err := db.Table("sys_menu as m").
-		Joins("JOIN sys_role_menu as rm ON rm.menu_id = m.id").
-		Joins("JOIN sys_user_role as ur ON ur.role_id = rm.role_id").
-		Where("ur.user_id = ?", userId).
+		Joins("JOIN sys_role_menu as rm ON rm.sys_menu_id = m.id").
+		Joins("JOIN sys_user_role as ur ON ur.sys_role_id = rm.sys_role_id").
+		Where("ur.sys_user_id = ?", userId).
 		Where("m.perms = ?", perms).
 		Count(&count).Error
 

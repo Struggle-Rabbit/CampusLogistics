@@ -22,7 +22,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/config"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/router"
@@ -62,9 +61,7 @@ func main() {
 	// 	panic(fmt.Sprintf("初始化Redis失败: %v", err))
 	// }
 
-	globalApp := app.NewApp(config.GlobalConfig, dao.DB)
-
-	if err := router.Run(globalApp); err != nil {
+	if err := router.Run(dao.DB); err != nil {
 		panic(fmt.Sprintf("服务启动失败: %v", err))
 	}
 }

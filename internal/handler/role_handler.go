@@ -1,0 +1,157 @@
+package handler
+
+import (
+	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/role"
+	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
+	"github.com/gin-gonic/gin"
+)
+
+type roleHandler struct {
+	svc *role.Service
+}
+
+func NewRoleHandler(svc *role.Service) *roleHandler {
+	return &roleHandler{svc: svc}
+}
+
+// CreateRole 创建角色
+// @Summary 角色创建接口
+// @Description 角色创建
+// @Tags 系统模块
+// @Accept json
+// @Produce json
+// @Param data body dto.CreateRoleReq true "入参"
+// @Success 200 {object} utils.SuccessResponse
+// @Failure 400 {object} utils.ErrResponse
+// @Router /api/v1/role/add [post]
+func (h *roleHandler) CreateRole(c *gin.Context) {
+	var roleReq dto.CreateRoleReq
+	if !utils.ShouldBind(c, &roleReq) {
+		return
+	}
+	if err := h.svc.CreateRole(&roleReq); err != nil {
+		utils.Fail(c, err.Error())
+		return
+	}
+	utils.Success(c)
+}
+
+// DelRole 删除角色
+// @Summary 角色删除接口
+// @Description 角色删除
+// @Tags 系统模块
+// @Accept json
+// @Produce json
+// @Param data body map[string]interface{} true "入参"
+// @Success 200 {object} utils.SuccessResponse
+// @Failure 400 {object} utils.ErrResponse
+// @Router /api/v1/role/del [post]
+func (h *roleHandler) DelRole(c *gin.Context) {
+	var data struct {
+		ID []string `json:"id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&data); err != nil {
+		utils.Fail(c, "参数错误")
+		return
+	}
+
+	if err := h.svc.DelRole(data.ID); err != nil {
+		utils.Fail(c, err.Error())
+		return
+	}
+	utils.Success(c, "删除成功")
+}
+
+// UpdateRole 更新角色
+// @Summary 角色修改接口
+// @Description 角色修改
+// @Tags 系统模块
+// @Accept json
+// @Produce json
+// @Param data body dto.UpdateRoleReq true "入参"
+// @Success 200 {object} utils.SuccessResponse
+// @Failure 400 {object} utils.ErrResponse
+// @Router /api/v1/role/update [post]
+func (h *roleHandler) UpdateRole(c *gin.Context) {
+	var roleReq dto.UpdateRoleReq
+	if !utils.ShouldBind(c, &roleReq) {
+		return
+	}
+
+	if err := h.svc.UpdateRole(&roleReq); err != nil {
+		utils.Fail(c, err.Error())
+		return
+	}
+	utils.Success(c)
+}
+
+// GetListByPage 角色分页
+// @Summary 角色分页查询接口
+// @Description 角色分页查询
+// @Tags 系统模块
+// @Accept json
+// @Produce json
+// @Param data query dto.RoleListByPageReq true "入参"
+// @Success 200 {object} utils.SuccessResponse
+// @Failure 400 {object} utils.ErrResponse
+// @Router /api/v1/role/listPage [get]
+func (h *roleHandler) GetListByPage(c *gin.Context) {
+	var roleReq dto.RoleListByPageReq
+	if !utils.ShouldBind(c, &roleReq) {
+		return
+	}
+
+	res, err := h.svc.GetRoleListByPage(&roleReq)
+	if err != nil {
+		utils.Fail(c, err.Error())
+		return
+	}
+	utils.Success(c, res, "获取成功")
+}
+
+// GetList 角色列表
+// @Summary 角色列表查询接口
+// @Description 角色列表查询
+// @Tags 系统模块
+// @Accept json
+// @Produce json
+// @Param data query dto.RoleListByPageReq true "入参"
+// @Success 200 {object} utils.SuccessResponse
+// @Failure 400 {object} utils.ErrResponse
+// @Router /api/v1/role/list [get]
+func (h *roleHandler) GetList(c *gin.Context) {
+	name, _ := c.GetQuery("name")
+
+	res, err := h.svc.GetRoleList(name)
+	if err != nil {
+		utils.Fail(c, err.Error())
+		return
+	}
+	utils.Success(c, res, "获取成功")
+}
+
+// QueryDetail 角色详情
+// @Summary 角色详情查询接口
+// @Description 角色详情查询
+// @Tags 系统模块
+// @Accept json
+// @Produce json
+// @Param id query string true "入参"
+// @Success 200 {object} utils.SuccessResponse
+// @Failure 400 {object} utils.ErrResponse
+// @Router /api/v1/role/detail [get]
+func (h *roleHandler) QueryDetail(c *gin.Context) {
+	id := c.Query("id")
+	if id == "" {
+		utils.Fail(c, "数据ID不能为空")
+		return
+	}
+	res, err := h.svc.RoleDetailById(id)
+	if err != nil {
+		utils.Fail(c, err.Error())
+		return
+	}
+	utils.Success(c, res, "获取成功")
+}

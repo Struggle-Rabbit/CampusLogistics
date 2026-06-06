@@ -12,10 +12,10 @@ import (
 )
 
 func TestSystemService(t *testing.T) {
-	_, appInstance := SetupTestDB()
-	svc := &system.SystemServiceProvider{App: appInstance}
-	menuSvc := &menu.MenuServiceProvider{App: appInstance}
-	userSvc := &user.UserServiceProvider{App: appInstance, Menu: menuSvc}
+	db := SetupTestDB()
+	svc := system.NewSystemService(db)
+	menuSvc := menu.NewMenuService(db)
+	userSvc := user.NewUserService(db, menuSvc)
 
 	// 先注册一个用户用于测试 Token 刷新
 	userSvc.Register(&dto.RegisterReq{

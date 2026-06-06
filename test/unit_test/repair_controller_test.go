@@ -8,16 +8,16 @@ import (
 	"testing"
 
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/controller/repair"
-	repairsvc "github.com/Struggle-Rabbit/CampusLogistics/internal/service/repair"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/handler"
+	"github.com/Struggle-Rabbit/CampusLogistics/internal/service/repair"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRepairController(t *testing.T) {
-	_, appInstance := SetupTestDB()
-	repairSvc := &repairsvc.RepairServiceProvider{App: appInstance}
-	ctl := &repair.RepairControllerProvider{RepairSvc: repairSvc}
+	db := SetupTestDB()
+	repairSvc := repair.NewRepairService(db)
+	ctl := handler.NewRepairHandler(repairSvc)
 
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

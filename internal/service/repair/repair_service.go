@@ -4,34 +4,27 @@ import (
 	"errors"
 
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
 	"github.com/Struggle-Rabbit/CampusLogistics/pkg/utils"
 	"gorm.io/gorm"
 )
 
-type RepairService interface {
-	GenerateOrderNo(prefix string) string
-	RepairOrderSubmit(userID string, req *dto.RepairOrderSubmitReq) error
-	GetListByPage(req *dto.RepairOrderListByPageReq) (*dto.PageResult, error)
-	GetDetailById(id string) (*dto.RepairOrderResult, error)
-	DelRepairOrderById(id string) error
-	UpdateRepairOrder(req dto.UpdateRepairOrderSubmitReq) error
-	OrderRecord(req dto.RecordReq) error
+type Service struct {
+	db *gorm.DB
 }
 
-type RepairServiceProvider struct {
-	App *app.App
+func NewRepairService(db *gorm.DB) *Service {
+	return &Service{db: db}
 }
 
 // GenerateOrderNo 生成唯一报修单号
-func (s *RepairServiceProvider) GenerateOrderNo(prefix string) string {
+func (s *Service) GenerateOrderNo(prefix string) string {
 	return prefix + utils.GenStringID()
 }
 
-func (s *RepairServiceProvider) RepairOrderSubmit(userID string, req *dto.RepairOrderSubmitReq) error {
-	if err := s.App.DB.Create(&model.RepairOrder{
+func (s *Service) RepairOrderSubmit(userID string, req *dto.RepairOrderSubmitReq) error {
+	if err := s.db.Create(&model.RepairOrder{
 		OrderNo:     s.GenerateOrderNo("RO"),
 		UserID:      userID,
 		RepairType:  req.RepairType,
@@ -46,11 +39,11 @@ func (s *RepairServiceProvider) RepairOrderSubmit(userID string, req *dto.Repair
 	return nil
 }
 
-func (s *RepairServiceProvider) GetListByPage(req *dto.RepairOrderListByPageReq) (*dto.PageResult, error) {
+func (s *Service) GetListByPage(req *dto.RepairOrderListByPageReq) (*dto.PageResult, error) {
 	var total int64
 	var repairList []*model.RepairOrder
 
-	db := s.App.DB.Model(&model.RepairOrder{})
+	db := s.db.Model(&model.RepairOrder{})
 
 	if req.OrderNo != "" {
 		db = db.Where("order_no LIKE ?", "%"+req.OrderNo+"%")
@@ -112,14 +105,14 @@ func (s *RepairServiceProvider) GetListByPage(req *dto.RepairOrderListByPageReq)
 	}, nil
 }
 
-func (s *RepairServiceProvider) GetDetailById(id string) (*dto.RepairOrderResult, error) {
+func (s *Service) GetDetailById(id string) (*dto.RepairOrderResult, error) {
 	var order model.RepairOrder
-	if err := s.App.DB.Where("id = ?", id).First(&order).Error; err != nil {
+	if err := s.db.Where("id = ?", id).First(&order).Error; err != nil {
 		return nil, err
 	}
 
 	var records []model.RepairRecord
-	s.App.DB.Where("order_id = ?", id).Order("created_at DESC").Find(&records)
+	s.db.Where("order_id = ?", id).Order("created_at DESC").Find(&records)
 
 	recordDTOs := make([]*dto.RepairRecordResult, len(records))
 	for i, r := range records {
@@ -152,9 +145,8 @@ func (s *RepairServiceProvider) GetDetailById(id string) (*dto.RepairOrderResult
 	}, nil
 }
 
-func (s *RepairServiceProvider) DelRepairOrderById(id string) error {
-	return s.App.DB.Transaction(func(tx *gorm.DB) error {
-		// 软删除报修单
+func (s *Service) DelRepairOrderById(id string) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
 		result := tx.Where("id = ?", id).Delete(&model.RepairOrder{})
 		if result.Error != nil {
 			return result.Error
@@ -162,7 +154,6 @@ func (s *RepairServiceProvider) DelRepairOrderById(id string) error {
 		if result.RowsAffected == 0 {
 			return errors.New("报修单不存在或已被删除")
 		}
-		// 级联删除流转记录 (这里也可以选择软删除，但 RepairRecord 目前没加 DeletedAt)
 		if err := tx.Where("order_id = ?", id).Delete(&model.RepairRecord{}).Error; err != nil {
 			return err
 		}
@@ -170,9 +161,9 @@ func (s *RepairServiceProvider) DelRepairOrderById(id string) error {
 	})
 }
 
-func (s *RepairServiceProvider) UpdateRepairOrder(req dto.UpdateRepairOrderSubmitReq) error {
+func (s *Service) UpdateRepairOrder(req dto.UpdateRepairOrderSubmitReq) error {
 	var order model.RepairOrder
-	if err := s.App.DB.Where("id = ?", req.ID).First(&order).Error; err != nil {
+	if err := s.db.Where("id = ?", req.ID).First(&order).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("未找到订单记录")
 		}
@@ -183,7 +174,7 @@ func (s *RepairServiceProvider) UpdateRepairOrder(req dto.UpdateRepairOrderSubmi
 		return errors.New("只有待分配可编辑")
 	}
 
-	return s.App.DB.Model(&order).Updates(map[string]interface{}{
+	return s.db.Model(&order).Updates(map[string]interface{}{
 		"repair_type": req.RepairType,
 		"address":     req.Address,
 		"status":      req.Status,
@@ -195,11 +186,11 @@ func (s *RepairServiceProvider) UpdateRepairOrder(req dto.UpdateRepairOrderSubmi
 	}).Error
 }
 
-func (s *RepairServiceProvider) OrderRecord(req dto.RecordReq) error {
+func (s *Service) OrderRecord(req dto.RecordReq) error {
 	if req.Status < 1 || req.Status > 6 {
 		return errors.New("无效的订单状态")
 	}
-	return s.App.DB.Transaction(func(tx *gorm.DB) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
 		var order model.RepairOrder
 		if err := tx.Model(&model.RepairOrder{}).Where("id = ?", req.ID).First(&order).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -212,7 +203,7 @@ func (s *RepairServiceProvider) OrderRecord(req dto.RecordReq) error {
 		}
 
 		result := tx.Model(&model.RepairOrder{}).
-			Where("id = ? AND status = ?", req.ID, order.Status). // 核心：乐观锁条件
+			Where("id = ? AND status = ?", req.ID, order.Status).
 			Select("status", "handler_id").
 			Updates(&model.RepairOrder{
 				Status:    req.Status,

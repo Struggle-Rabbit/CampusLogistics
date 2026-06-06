@@ -4,27 +4,20 @@ import (
 	"errors"
 
 	"github.com/Struggle-Rabbit/CampusLogistics/api/dto"
-	"github.com/Struggle-Rabbit/CampusLogistics/internal/app"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/dao"
 	"github.com/Struggle-Rabbit/CampusLogistics/internal/model"
+	"gorm.io/gorm"
 )
 
-// MenuService 菜单服务接口
-type MenuService interface {
-	CreateMenu(req *dto.CreateMenuReq) error
-	UpdateMenu(req *dto.UpdateMenuReq) error
-	DelMenu(id []string) error
-	GetMenuList(req *dto.MenuListReq) ([]dto.MenuResult, error)
-	GetMenuListByPage(req *dto.MenuListByPageReq) (*dto.PageResult, error)
-	MenuDetailById(id string) (*dto.MenuResult, error)
-	BuildMenuTree(allMenus []model.SysMenu) []dto.MenuResult
+type Service struct {
+	db *gorm.DB
 }
 
-type MenuServiceProvider struct {
-	App *app.App
+func NewMenuService(db *gorm.DB) *Service {
+	return &Service{db: db}
 }
 
-func (s *MenuServiceProvider) CreateMenu(req *dto.CreateMenuReq) error {
+func (s *Service) CreateMenu(req *dto.CreateMenuReq) error {
 	menu := &model.SysMenu{
 		ParentID:    req.ParentID,
 		Name:        req.Name,
@@ -47,10 +40,10 @@ func (s *MenuServiceProvider) CreateMenu(req *dto.CreateMenuReq) error {
 		menu.Component = req.Component
 	}
 
-	return s.App.DB.Create(menu).Error
+	return s.db.Create(menu).Error
 }
 
-func (s *MenuServiceProvider) UpdateMenu(req *dto.UpdateMenuReq) error {
+func (s *Service) UpdateMenu(req *dto.UpdateMenuReq) error {
 	if req.Type == 2 {
 		if req.Path == "" {
 			return errors.New("菜单路由地址不能为空")
@@ -72,17 +65,16 @@ func (s *MenuServiceProvider) UpdateMenu(req *dto.UpdateMenuReq) error {
 		"component":   req.Component,
 	}
 
-	return s.App.DB.Model(&model.SysMenu{}).Where("id = ?", req.ID).Updates(updateData).Error
+	return s.db.Model(&model.SysMenu{}).Where("id = ?", req.ID).Updates(updateData).Error
 }
 
-func (s *MenuServiceProvider) DelMenu(id []string) error {
-
-	return s.App.DB.Delete(&model.SysMenu{}, id).Error
+func (s *Service) DelMenu(id []string) error {
+	return s.db.Delete(&model.SysMenu{}, id).Error
 }
 
-func (s *MenuServiceProvider) GetMenuList(req *dto.MenuListReq) ([]dto.MenuResult, error) {
+func (s *Service) GetMenuList(req *dto.MenuListReq) ([]dto.MenuResult, error) {
 	var menuSqlRes []model.SysMenu
-	tx := s.App.DB.Model(&model.SysMenu{})
+	tx := s.db.Model(&model.SysMenu{})
 	if req.Name != nil && *req.Name != "" {
 		tx = tx.Where("name LIKE ?", "%"+*req.Name+"%")
 	}
@@ -103,15 +95,14 @@ func (s *MenuServiceProvider) GetMenuList(req *dto.MenuListReq) ([]dto.MenuResul
 		return nil, err
 	}
 
-	menuTree := s.BuildMenuTree(menuSqlRes)
-	return menuTree, nil
+	return s.BuildMenuTree(menuSqlRes), nil
 }
 
-func (s *MenuServiceProvider) GetMenuListByPage(req *dto.MenuListByPageReq) (*dto.PageResult, error) {
+func (s *Service) GetMenuListByPage(req *dto.MenuListByPageReq) (*dto.PageResult, error) {
 	var list []model.SysMenu
 	var total int64
-	db := s.App.DB.Model(&model.SysMenu{})
-	if err := db.Where("parent_id = ?", "0").Count(&total).Error; err != nil {
+	db := s.db.Model(&model.SysMenu{})
+	if err := db.Count(&total).Error; err != nil {
 		return nil, err
 	}
 	if req.Name != nil && *req.Name != "" {
@@ -141,9 +132,9 @@ func (s *MenuServiceProvider) GetMenuListByPage(req *dto.MenuListByPageReq) (*dt
 	}, nil
 }
 
-func (s *MenuServiceProvider) MenuDetailById(id string) (*dto.MenuResult, error) {
+func (s *Service) MenuDetailById(id string) (*dto.MenuResult, error) {
 	var m model.SysMenu
-	err := s.App.DB.Where("id = ?", id).First(&m).Error
+	err := s.db.Where("id = ?", id).First(&m).Error
 	if err != nil {
 		return nil, err
 	}
@@ -165,11 +156,10 @@ func (s *MenuServiceProvider) MenuDetailById(id string) (*dto.MenuResult, error)
 	}, nil
 }
 
-// BuildMenuTree 处理树形菜单结构
-func (s *MenuServiceProvider) BuildMenuTree(allMenus []model.SysMenu) []dto.MenuResult {
+// BuildMenuTree 处理树形菜单结构（接收者方法，内部调用私有实现）
+func (s *Service) BuildMenuTree(allMenus []model.SysMenu) []dto.MenuResult {
 	menuMap := make(map[string]*dto.MenuResult)
 
-	// 1. 初始化 Map
 	for _, menu := range allMenus {
 		menuMap[menu.ID] = &dto.MenuResult{
 			ID:          menu.ID,
@@ -191,12 +181,10 @@ func (s *MenuServiceProvider) BuildMenuTree(allMenus []model.SysMenu) []dto.Menu
 
 	var tree []dto.MenuResult
 
-	// 2. 建立层级关系
 	for _, menu := range allMenus {
 		currentNode := menuMap[menu.ID]
 		if menu.ParentID == "0" || menu.ParentID == "" {
-			// 延迟到下一步处理根节点，或者这里直接加指针（如果 tree 是 []*dto.MenuResult）
-			// 但因为 tree 是 []dto.MenuResult，我们应该在所有关系建立后再收集根节点
+			// skip, collect root nodes later
 		} else {
 			if parentNode, ok := menuMap[menu.ParentID]; ok {
 				parentNode.Children = append(parentNode.Children, currentNode)
@@ -204,7 +192,6 @@ func (s *MenuServiceProvider) BuildMenuTree(allMenus []model.SysMenu) []dto.Menu
 		}
 	}
 
-	// 3. 收集根节点
 	for _, menu := range allMenus {
 		if menu.ParentID == "0" || menu.ParentID == "" {
 			tree = append(tree, *menuMap[menu.ID])

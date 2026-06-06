@@ -14,12 +14,6 @@ type BaseModel struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type BaseModelIntId struct {
-	ID        uint      `gorm:"primarykey;comment:主键ID" json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
 // BaseModelWithDelete 带软删除的基础模型
 type BaseModelWithDelete struct {
 	ID        string         `gorm:"primarykey;type:varchar(32);comment:主键ID" json:"id"`
